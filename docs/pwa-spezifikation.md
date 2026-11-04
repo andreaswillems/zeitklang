@@ -94,7 +94,9 @@ Flow und darf nicht an den Browser weitergereicht werden.
    `Authorization: Bearer <token>`, Body `{"uris": ["spotify:track:<id>"]}`
    (Scope `user-modify-playback-state` nötig).
 4. Anzeige: `player_state_changed` → Titel/Künstler/Paused; Play/Pause-Button
-   (`player.togglePlay()`). Titel/Künstler liegen hinter einem Spoiler
+   (`player.togglePlay()`). Nur der erste State nach einem angenommenen
+   Play-Command wechselt zur Player-Ansicht — Pause-Events („Weitere Karte
+   scannen") springen nicht zurück. Titel/Künstler liegen hinter einem Spoiler
    (`<details>`): Im Quiz darf die Lösung nicht sofort sichtbar sein — Tippen
    deckt auf, ein neuer Play macht den Spoiler wieder zu.
 5. iOS/mobile: beim Scan-Tap `player.activateElement()` aufrufen; nach dem Transfer

@@ -157,6 +157,10 @@ function logout() {
 
 let sdkReady = false;
 let accessToken = null;
+// Play-Command angenommen → der NÄCHSTE State-Event gehört zum neuen Track und
+// zeigt die Player-Ansicht. Pause-Events (z. B. „Weitere Karte scannen")
+// springen sonst asynchron zurück und erforden einen zweiten Klick.
+let awaitingTrackState = false;
 
 // Muss global sein, bevor das SDK-Script lädt (Script-Tag steht nach app.js).
 window.onSpotifyWebPlaybackSDKReady = () => {
@@ -206,8 +210,11 @@ function renderPlayerState(state) {
     playPauseEl.hidden = false;
     // ▮▮ im selben Geometrie-Stil wie ▶ — ⏸ rendert je nach Plattform als Emoji
     playPauseEl.textContent = state.paused ? "▶" : "▮▮";
-    // Erster Player-State = Track läuft → Player-Ansicht zeigen (§6.3)
-    show(playerSection);
+    // Nur der erste State nach einem Play-Command zeigt die Player-Ansicht (§6.3)
+    if (awaitingTrackState) {
+        awaitingTrackState = false;
+        show(playerSection);
+    }
 }
 
 // Spoiler-Mechanik: Text der Karte bleibt unscharf, bis details offen ist
@@ -261,6 +268,7 @@ async function playTrack(trackId) {
     }
     if (response.ok) {
         statusEl.textContent = "";
+        awaitingTrackState = true;
         return;
     }
     const messages = {
