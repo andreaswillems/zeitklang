@@ -2,75 +2,47 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0e0e0e">
     <title>Zeitklang — QR-Scan</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 16px;
-            background: #191414;
-            color: #fff;
-        }
-        button {
-            font-size: 1.1rem;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 24px;
-            background: #1db954;
-            color: #191414;
-            font-weight: bold;
-        }
-        #reader { margin-top: 16px; width: 100%; }
-        #result {
-            margin-top: 16px;
-            font-size: 1rem;
-            word-break: break-all;
-        }
-        #status {
-            margin-top: 16px;
-            color: #ff9999;
-            word-break: break-all;
-        }
-        input {
-            display: block;
-            margin-top: 16px;
-            padding: 12px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 8px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        #play-url { margin-top: 8px; }
-        details { margin-top: 16px; }
-        summary { cursor: pointer; color: #aaa; }
-        #track { margin: 8px 0 0; font-size: 1.1rem; }
-        #toggle { margin-top: 16px; }
-        #logout { margin-top: 24px; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Zeitklang</h1>
-    <!-- Zustände §6: nicht angemeldet → Login; angemeldet → Scan -->
-    <section id="login" hidden>
-        <button id="login-button">Mit Spotify anmelden</button>
-    </section>
-    <section id="scan" hidden>
-        <button id="start">Scan starten</button>
-        <div id="reader"></div>
-        <p id="result"></p>
-        <input id="track-url" type="url" placeholder="Spotify-URL einfügen">
-        <button id="play-url">Abspielen</button>
-        <!-- Spoiler: Im Quiz darf die Lösung nicht sofort sichtbar sein. -->
-        <details id="spoiler">
-            <summary>Titel &amp; Interpret anzeigen</summary>
-            <p id="track"></p>
-        </details>
-        <button id="toggle" hidden>▶</button>
-        <button id="logout">Abmelden</button>
-    </section>
-    <p id="status"></p>
+    <header>
+        <h1>Zeitklang</h1>
+        <p class="tagline">Scannen · Hören · Einordnen</p>
+    </header>
+    <main>
+        <!-- Zustände §6: nicht angemeldet → Login; angemeldet → Scan -->
+        <section id="login" hidden>
+            <p class="hero-text">Melde dich an, scanne eine Karte und das Lied spielt auf deinem Handy.</p>
+            <button id="login-button" class="primary">Mit Spotify anmelden</button>
+            <p class="hint">Benötigt Spotify Premium.</p>
+        </section>
+        <section id="scan" hidden>
+            <p id="counter"></p>
+            <button id="start" class="primary">Scan starten</button>
+            <div id="reader"></div>
+            <p id="result" role="status"></p>
+            <div id="now-playing" hidden>
+                <img id="cover" alt="Album-Cover" width="92" height="92">
+                <div class="np-meta">
+                    <div class="eq" aria-hidden="true"><span></span><span></span><span></span></div>
+                    <p id="np-title"></p>
+                    <p id="np-artist"></p>
+                </div>
+                <button id="toggle" hidden>▶</button>
+            </div>
+            <!-- Spoiler: Im Quiz darf die Lösung nicht sofort sichtbar sein. -->
+            <details id="spoiler">
+                <summary>Titel &amp; Interpret anzeigen</summary>
+            </details>
+            <input id="track-url" type="url" placeholder="Spotify-URL einfügen" autocomplete="off">
+            <button id="play-url" class="ghost">Abspielen</button>
+            <button id="logout" class="ghost">Abmelden</button>
+        </section>
+        <p id="status" role="alert"></p>
+    </main>
     <script src="config.js"></script>
     <script src="vendor/html5-qrcode.min.js"></script>
     <script src="app.js"></script>

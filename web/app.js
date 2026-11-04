@@ -18,9 +18,13 @@ const loginSection = document.getElementById("login");
 const scanSection = document.getElementById("scan");
 const statusEl = document.getElementById("status");
 const resultEl = document.getElementById("result");
-const trackEl = document.getElementById("track");
 const spoilerEl = document.getElementById("spoiler");
 const playPauseEl = document.getElementById("toggle");
+const cardEl = document.getElementById("now-playing");
+const coverEl = document.getElementById("cover");
+const titleEl = document.getElementById("np-title");
+const artistEl = document.getElementById("np-artist");
+const counterEl = document.getElementById("counter");
 const scanner = new Html5Qrcode("reader");
 
 // ---------- Auth (PKCE), Spezifikation §3 ----------
@@ -178,11 +182,29 @@ function createPlayer() {
 function renderPlayerState(state) {
     if (!state) return;
     const track = state.track_window.current_track;
-    trackEl.textContent = `${track.name} — ${track.artists
-        .map((a) => a.name)
-        .join(", ")}`;
+    titleEl.textContent = track.name;
+    artistEl.textContent = track.artists.map((a) => a.name).join(", ");
+    const img = track.album.images[0];
+    coverEl.hidden = !img;
+    if (img) coverEl.src = img.url;
+    cardEl.hidden = false;
+    cardEl.classList.toggle("playing", !state.paused);
     playPauseEl.hidden = false;
     playPauseEl.textContent = state.paused ? "▶" : "⏸";
+}
+
+// Spoiler-Mechanik: Text der Karte bleibt unscharf, bis details offen ist
+spoilerEl.addEventListener("toggle", () =>
+    cardEl.classList.toggle("revealed", spoilerEl.open),
+);
+
+// ---------- Zähler (kleines Spielgefühl, persistiert wie §8 die Tokens) ----------
+
+const COUNT_KEY = "zeitklang_count";
+
+function renderCount() {
+    const n = Number(localStorage.getItem(COUNT_KEY) ?? 0);
+    counterEl.textContent = n ? `🎵 ${n} Songs gehört` : "";
 }
 
 // §4: Track-ID aus open.spotify.com/track/<id>, spotify:track:<id>
@@ -238,7 +260,12 @@ function playScannedText(text) {
         resultEl.textContent = "Kein Spotify-Track erkannt: " + text;
         return;
     }
-    resultEl.textContent = "";
+    resultEl.textContent = "✓ Track erkannt";
+    localStorage.setItem(
+        COUNT_KEY,
+        String(Number(localStorage.getItem(COUNT_KEY) ?? 0) + 1),
+    );
+    renderCount();
     playTrack(trackId);
 }
 
@@ -256,6 +283,7 @@ async function init() {
         if (accessToken) {
             createPlayer();
             show(scanSection);
+            renderCount();
         } else {
             show(loginSection);
         }

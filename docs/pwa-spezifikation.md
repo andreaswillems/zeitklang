@@ -115,7 +115,7 @@ SDK streamt ohne Premium nicht.
 
 - `manifest.webmanifest`: `start_url: "./"`, `display: "standalone"`, Name, Theme-Farbe,
   Icons 192 + 512.
-- `sw.js`: precacht `./, index.html, app.js, config.js, manifest.webmanifest, vendor/html5-qrcode.min.js, icons/*`
+- `sw.js`: precacht `./, index.html, style.css, app.js, config.js, manifest.webmanifest, vendor/html5-qrcode.min.js, icons/*`
   (Cache-Name mit Versionskonstante); Cache-first nur für diese Dateien, Navigationen
   und API-Calls gehen immer ans Netz. Registriert in `app.js`
   (`navigator.serviceWorker.register("sw.js")`).
