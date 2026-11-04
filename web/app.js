@@ -142,6 +142,7 @@ async function getValidToken() {
 }
 
 function logout() {
+    clearTimeout(authErrorTimer);
     sessionStorage.removeItem(KEYS.access);
     sessionStorage.removeItem(KEYS.expiresAt);
     // Refresh-Token bleibt: Spotify stellt ihn nur bei neuer Zustimmung aus —
@@ -157,6 +158,10 @@ function logout() {
 
 let sdkReady = false;
 let accessToken = null;
+// Auth-Fehler-Hinweis verzögert zeigen: SDK v1.10 feuert authentication_error
+// auch spurisch beim Connect („Invalid token scopes."), obwohl ready folgt.
+const AUTH_ERROR_MSG = "Authentifizierung fehlgeschlagen — bitte neu anmelden.";
+let authErrorTimer = null;
 // Play-Command angenommen → der NÄCHSTE State-Event gehört zum neuen Track und
 // zeigt die Player-Ansicht. Pause-Events (z. B. „Weitere Karte scannen")
 // springen sonst asynchron zurück und erforden einen zweiten Klick.
@@ -176,18 +181,21 @@ function createPlayer() {
         volume: 0.8,
     });
     window.player.addListener("ready", ({ device_id }) => {
+        clearTimeout(authErrorTimer);
+        if (statusEl.textContent === AUTH_ERROR_MSG) statusEl.textContent = "";
         window.deviceId = device_id;
     });
     window.player.addListener("player_state_changed", renderPlayerState);
     window.player.addListener("initialization_error", ({ message }) => {
         statusEl.textContent = "Player-Fehler: " + message;
     });
-    window.player.addListener("authentication_error", ({ message }) => {
-        // SDK meldet den Autoplay-Block des Browsers als authentication_error
-        // ("Browser prevented autoplay…") — activateElement() beim ersten Tap
-        // löst das (§5.5), das ist kein echter Auth-Fehler.
-        if (/autoplay/i.test(message)) return;
-        statusEl.textContent = "Authentifizierung fehlgeschlagen — bitte neu anmelden.";
+    window.player.addListener("authentication_error", () => {
+        // Spurischer Fehler (Connect wird trotzdem fertig) oder echter Tot:
+        // Hinweis erst zeigen, wenn nicht binnen 3 s ready nachkommt.
+        clearTimeout(authErrorTimer);
+        authErrorTimer = setTimeout(() => {
+            statusEl.textContent = AUTH_ERROR_MSG;
+        }, 3000);
     });
     window.player.addListener("account_error", () => {
         statusEl.textContent = "Spotify Premium erforderlich.";

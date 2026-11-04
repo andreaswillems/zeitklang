@@ -140,9 +140,12 @@ SDK streamt ohne Premium nicht.
   „playback does not start automatically after transferring playback" — nach unserem
   Web-API-Play startet die Wiedergabe auf iOS ggf. pausiert. Workaround in §5.5
   (`activateElement()` beim Tap + Play/Pause-Button). Ceiling: auf iOS evtl. ein
-  zusätzlicher Tap nötig; kein Upgrade nötig. Der SDK meldet den Autoplay-Block
-  des Browsers zudem als `authentication_error` („Browser prevented autoplay…") —
-  `app.js` filtert diese Meldung heraus, sie ist kein echter Auth-Fehler.
+  zusätzlicher Tap nötig; kein Upgrade nötig. SDK v1.10 meldet den Autoplay-Block
+  des Browsers als eigenes Event `autoplay_failed` (in `app.js` bewusst unbeachtet —
+  `activateElement()` beim Tap löst das, §5.5). `authentication_error` feuert zudem
+  spurisch beim Connect („Invalid token scopes."), obwohl `ready` nachkommt —
+  `app.js` zeigt den Hinweis deshalb erst, wenn nicht binnen 3 s `ready` folgt,
+  und räumt ihn beim `ready` wieder ab.
 
 ## 9. Out of Scope (YAGNI — bewusst nicht in dieser PWA)
 
