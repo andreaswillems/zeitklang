@@ -131,8 +131,9 @@ def draw_info_page(c: canvas.Canvas, songs: list[dict], page_num: int, total_pag
     """Zeichnet eine Seite mit Song-Infos (Rückseite der Karten)."""
 
     for idx, song in enumerate(songs):
-        # Position im Grid berechnen (gleiche Anordnung wie Vorderseite!)
-        col = idx % COLS
+        # Spalten spiegeln: Beim Wendendruck ("an langer Kante") liegt die
+        # Rückseite links-rechts vertauscht über der Vorderseite.
+        col = COLS - 1 - (idx % COLS)
         row = idx // COLS
 
         x = MARGIN + col * CARD_WIDTH
