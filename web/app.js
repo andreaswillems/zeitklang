@@ -77,7 +77,9 @@ async function requestToken(body) {
         body: new URLSearchParams(body).toString(),
     });
     if (!response.ok) {
-        throw new Error(`Token-Endpunkt antwortete mit ${response.status}`);
+        const err = new Error(`Token-Endpunkt antwortete mit ${response.status}`);
+        err.status = response.status;
+        throw err;
     }
     const tokens = await response.json();
     sessionStorage.setItem(KEYS.access, tokens.access_token);
@@ -124,18 +126,26 @@ async function getValidToken() {
     }
     const refresh = localStorage.getItem(KEYS.refresh);
     if (!refresh) return null;
-    await requestToken({
-        grant_type: "refresh_token",
-        refresh_token: refresh,
-        client_id: SPOTIFY_CLIENT_ID,
-    });
+    try {
+        await requestToken({
+            grant_type: "refresh_token",
+            refresh_token: refresh,
+            client_id: SPOTIFY_CLIENT_ID,
+        });
+    } catch (err) {
+        // Ungültiger Refresh-Token (400) verwerfen — sonst retryed jeder Start
+        // bis in alle Ewigkeit (Spotify-Doku: discard + neu autorisieren).
+        if (err.status === 400) localStorage.removeItem(KEYS.refresh);
+        throw err;
+    }
     return sessionStorage.getItem(KEYS.access);
 }
 
 function logout() {
     sessionStorage.removeItem(KEYS.access);
     sessionStorage.removeItem(KEYS.expiresAt);
-    localStorage.removeItem(KEYS.refresh);
+    // Refresh-Token bleibt: Spotify stellt ihn nur bei neuer Zustimmung aus —
+    // löschen würde das Auto-Login dauerhaft brechen (Spec §3.6).
     accessToken = null;
     window.deviceId = null;
     window.player?.disconnect();
