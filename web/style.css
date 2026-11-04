@@ -1,9 +1,9 @@
-/* Zeitklang PWA — dunkles Spotify-Theme, mobil zuerst */
+/* Zeitklang PWA — dunkles Theme mit blauem Akzent, mobil zuerst */
 
 :root {
     --bg: #0e0e0e;
-    --green: #1db954;
-    --green-bright: #1ed760;
+    --accent: #3b82f6;
+    --accent-bright: #60a5fa;
     --text-dim: #b3b3b3;
     --card: rgba(255, 255, 255, 0.06);
     --border: rgba(255, 255, 255, 0.1);
@@ -20,7 +20,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: #fff;
     background:
-        radial-gradient(120% 55% at 50% -10%, rgba(29, 185, 84, 0.22), transparent 70%),
+        radial-gradient(120% 55% at 50% -10%, rgba(59, 130, 246, 0.22), transparent 70%),
         var(--bg);
     padding:
         calc(20px + env(safe-area-inset-top))
@@ -42,7 +42,7 @@ h1 {
     margin: 0;
     font-size: clamp(2rem, 8vw, 2.6rem);
     letter-spacing: -0.03em;
-    background: linear-gradient(100deg, var(--green-bright), #fff 65%);
+    background: linear-gradient(100deg, var(--accent-bright), #fff 65%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -72,7 +72,7 @@ summary:active {
 
 button:focus-visible,
 summary:focus-visible {
-    outline: 2px solid var(--green-bright);
+    outline: 2px solid var(--accent-bright);
     outline-offset: 2px;
 }
 
@@ -81,13 +81,13 @@ summary:focus-visible {
     width: 100%;
     padding: 16px 24px;
     font-size: 1.05rem;
-    color: #052e13;
-    background: linear-gradient(180deg, var(--green-bright), var(--green));
-    box-shadow: 0 6px 28px rgba(29, 185, 84, 0.35);
+    color: #0a1b33;
+    background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+    box-shadow: 0 6px 28px rgba(59, 130, 246, 0.35);
 }
 
 .primary:hover {
-    box-shadow: 0 8px 34px rgba(29, 185, 84, 0.5);
+    box-shadow: 0 8px 34px rgba(59, 130, 246, 0.5);
 }
 
 .ghost {
@@ -168,7 +168,7 @@ section:not([hidden]) {
 #result {
     margin: 16px 0 0;
     min-height: 1.3em;
-    color: var(--green-bright);
+    color: var(--accent-bright);
     word-break: break-all;
 }
 
@@ -267,8 +267,8 @@ summary::-webkit-details-marker {
     flex-shrink: 0;
     border-radius: 50%;
     font-size: 1.05rem;
-    color: #052e13;
-    background: linear-gradient(180deg, var(--green-bright), var(--green));
+    color: #0a1b33;
+    background: linear-gradient(180deg, var(--accent-bright), var(--accent));
 }
 
 /* Equalizer: läuft nur bei laufender Wiedergabe */
@@ -282,7 +282,7 @@ summary::-webkit-details-marker {
 .eq span {
     width: 3px;
     border-radius: 2px;
-    background: var(--green-bright);
+    background: var(--accent-bright);
     animation: eq-bounce 0.9s ease-in-out infinite;
 }
 
