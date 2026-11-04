@@ -322,10 +322,6 @@ document
         window.player?.pause(); // Karte ist durch → Wiedergabe aus
         show(scanSection);
     });
-document.getElementById("play-url").addEventListener("click", () => {
-    window.player?.activateElement(); // iOS: braucht einen User-Tap (§5.5)
-    playScannedText(document.getElementById("track-url").value);
-});
 playPauseEl.addEventListener("click", () => window.player?.togglePlay());
 init();
 

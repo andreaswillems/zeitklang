@@ -42,7 +42,7 @@ Gestartet mit `uv run zeitklang serve`: Der Server liefert die Web-App aus `web/
 
 1. Am Mac `https://127.0.0.1:8080` öffnen → „Mit Spotify anmelden" → Spotify-Consent → zurück auf der Seite, angemeldet.
 2. „Scan starten" tippen → Kamera-Freigabe erteilen.
-3. QR-Code einer gedruckten Karte scannen (oder Spotify-URL ins Textfeld einfügen) → der Song spielt direkt im Browser.
+3. QR-Code einer gedruckten Karte scannen → der Song spielt direkt im Browser.
 
 Die Wiedergabe läuft per **Web Playback SDK**: Der Browser wird zum Spotify-Connect-Gerät, gestartet wird der Track über die Web API. **Spotify Premium erforderlich** — ohne Premium erscheint eine entsprechende Meldung. Auf iOS startet die Wiedergabe evtl. pausiert → einmal auf ▶ tippen.
 

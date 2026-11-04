@@ -172,31 +172,6 @@ section:not([hidden]) {
     word-break: break-all;
 }
 
-input {
-    width: 100%;
-    margin-top: 16px;
-    padding: 14px 16px;
-    font: inherit;
-    font-size: 1rem;
-    color: #fff;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-}
-
-input::placeholder {
-    color: #777;
-}
-
-input:focus {
-    outline: none;
-    border-color: var(--green);
-}
-
-#play-url {
-    margin-top: 10px;
-}
-
 details {
     margin-top: 16px;
     text-align: center; /* summary als zentrierter Button */

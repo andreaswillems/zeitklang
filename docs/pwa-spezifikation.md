@@ -19,7 +19,7 @@
 | Auth-Flow | Authorization Code + **PKCE** (Public Client; ein Client Secret gibt es im Browser nicht) |
 | Scopes | `streaming user-read-playback-state user-modify-playback-state user-read-private` |
 | QR-Inhalt | unverändert `https://open.spotify.com/track/<id>` (wie `cards.py` heute druckt) — die PWA extrahiert die Track-ID per Regex, `cards.py` bleibt unangetastet |
-| Scan-Mechanismus | [`html5-qrcode`](https://github.com/mebjas/html5-qrcode), vendored als `web/vendor/html5-qrcode.min.js` (Release-Tag pinnen) — läuft auch auf iOS-Safari, wo `BarcodeDetector` fehlt; Fallback: Textfeld zum URL-Einfügen |
+| Scan-Mechanismus | [`html5-qrcode`](https://github.com/mebjas/html5-qrcode), vendored als `web/vendor/html5-qrcode.min.js` (Release-Tag pinnen) — läuft auch auf iOS-Safari, wo `BarcodeDetector` fehlt |
 | Wiedergabe | Web Playback SDK (`sdk.scdn.co/spotify-player.js`) als Spotify-Connect-Gerät; Play über Web API `PUT /v1/me/player/play?device_id=…` |
 | PWA-Shell | `manifest.webmanifest` + minimaler Service Worker (nur statische Assets, Cache-first; Navigationen immer network) |
 
@@ -81,7 +81,6 @@ Flow und darf nicht an den Browser weitergereicht werden.
 - Akzeptierte Inhalte: `https://open.spotify.com/track/<22-stellige-ID>…`,
   `spotify:track:<ID>` und vorsorglich die künftige Route `/play/<ID>` — ein Regex
   extrahiert die ID aus dem gescannten Text.
-- Fallback: Textfeld „URL einfügen" (gleiches Regex).
 - Ergebnis: Track-ID → Wiedergabe (§5).
 
 ## 5. Wiedergabe (c)
@@ -111,7 +110,7 @@ SDK streamt ohne Premium nicht.
 ## 6. UI-Zustände (eine Seite `index.html`)
 
 1. **Nicht angemeldet** → Login-Button.
-2. **Angemeldet, nichts gescannt** → Kamera-Vorschau + „URL einfügen"-Feld.
+2. **Angemeldet, nichts gescannt** → Kamera-Vorschau.
 3. **Gescannt** → Track-ID + Play/Pause + Fehlermeldung, falls zutreffend.
 
 ## 7. PWA-Shell
@@ -153,7 +152,7 @@ SDK streamt ohne Premium nicht.
 
 1. `uv run zeitklang serve` → `http://127.0.0.1:8080` öffnet die PWA.
 2. Login-Button → Spotify-Consent (Scopes aus §1) → zurück auf `/`, „angemeldet".
-3. QR-Code einer Karte aus `output/zeitklang-karten.pdf` scannen (oder URL einfügen) →
+3. QR-Code einer Karte aus `output/zeitklang-karten.pdf` scannen →
    Song spielt über das Web Playback SDK (Premium-Account).
 4. Seiten-Reload → dank Refresh Token ohne erneuten Login startklar.
 5. Ohne Premium: Scan → Play → lesbare Meldung „Premium erforderlich".
