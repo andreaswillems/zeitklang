@@ -16,6 +16,7 @@ const KEYS = {
 
 const loginSection = document.getElementById("login");
 const scanSection = document.getElementById("scan");
+const playerSection = document.getElementById("player-view");
 const statusEl = document.getElementById("status");
 const resultEl = document.getElementById("result");
 const spoilerEl = document.getElementById("spoiler");
@@ -187,10 +188,11 @@ function renderPlayerState(state) {
     const img = track.album.images[0];
     coverEl.hidden = !img;
     if (img) coverEl.src = img.url;
-    cardEl.hidden = false;
     cardEl.classList.toggle("playing", !state.paused);
     playPauseEl.hidden = false;
     playPauseEl.textContent = state.paused ? "▶" : "⏸";
+    // Erster Player-State = Track läuft → Player-Ansicht zeigen (§6.3)
+    show(playerSection);
 }
 
 // Spoiler-Mechanik: Text der Karte bleibt unscharf, bis details offen ist
@@ -274,6 +276,7 @@ function playScannedText(text) {
 function show(section) {
     loginSection.hidden = section !== loginSection;
     scanSection.hidden = section !== scanSection;
+    playerSection.hidden = section !== playerSection;
 }
 
 async function init() {
@@ -295,6 +298,9 @@ async function init() {
 
 document.getElementById("login-button").addEventListener("click", login);
 document.getElementById("logout").addEventListener("click", logout);
+document
+    .getElementById("next-card")
+    .addEventListener("click", () => show(scanSection));
 document.getElementById("play-url").addEventListener("click", () => {
     window.player?.activateElement(); // iOS: braucht einen User-Tap (§5.5)
     playScannedText(document.getElementById("track-url").value);

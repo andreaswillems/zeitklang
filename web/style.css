@@ -99,6 +99,19 @@ button:focus-visible {
     border-color: rgba(255, 255, 255, 0.25);
 }
 
+/* ---------- Ansichten (Login / Scan / Player) ---------- */
+
+section:not([hidden]) {
+    animation: view-in 0.25s ease;
+}
+
+@keyframes view-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+}
+
 /* ---------- Login (§6.1) ---------- */
 
 #login {
@@ -183,6 +196,10 @@ details {
 summary {
     cursor: pointer;
     color: var(--text-dim);
+}
+
+#next-card {
+    margin-top: 28px;
 }
 
 #logout {

@@ -4,7 +4,7 @@ Hier entsteht die zukünftige **PWA**, mit der die QR-Codes der Karten gescannt 
 
 **Spezifikation (verbindlich): `docs/pwa-spezifikation.md`** — Spotify-Login (OAuth + PKCE), QR-Scan (`html5-qrcode`), Wiedergabe per Web Playback SDK. Konzept-Hintergrund: `docs/web-variante.md`.
 
-**Umgesetzt:** Durchstich (LAN-Hosting + QR-Scan), Spotify-Login (§3), Wiedergabe per Web Playback SDK (§5) und responsives UI mit Now-Playing-Karte (Cover, Equalizer, Spoiler-Blur) und Song-Zähler. Offen: PWA-Shell (§7).
+**Umgesetzt:** Durchstich (LAN-Hosting + QR-Scan), Spotify-Login (§3), Wiedergabe per Web Playback SDK (§5) und responsives UI mit drei Ansichten (Login / Scan / Player), Now-Playing-Karte (Cover, Equalizer, Spoiler-Blur) und Song-Zähler. Offen: PWA-Shell (§7).
 
 Dateien laut Spezifikation (alles statisch; lokal via `zeitklang serve` auf Port 8080, produktiv via GitHub Pages: https://andreaswillems.github.io/zeitklang/ — Spezifikation §11):
 

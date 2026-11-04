@@ -19,12 +19,20 @@
             <button id="login-button" class="primary">Mit Spotify anmelden</button>
             <p class="hint">Benötigt Spotify Premium.</p>
         </section>
+        <!-- Seite 2: Scan (§6.2) -->
         <section id="scan" hidden>
             <p id="counter"></p>
             <button id="start" class="primary">Scan starten</button>
             <div id="reader"></div>
             <p id="result" role="status"></p>
-            <div id="now-playing" hidden>
+            <input id="track-url" type="url" placeholder="Spotify-URL einfügen" autocomplete="off">
+            <button id="play-url" class="ghost">Abspielen</button>
+            <button id="logout" class="ghost">Abmelden</button>
+        </section>
+        <!-- Seite 3: Player (§6.3) — Song-Infos hinter Spoiler.
+             id nicht "player" nennen: window.player ist der SDK-Player. -->
+        <section id="player-view" hidden>
+            <div id="now-playing">
                 <img id="cover" alt="Album-Cover" width="92" height="92">
                 <div class="np-meta">
                     <div class="eq" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -37,9 +45,7 @@
             <details id="spoiler">
                 <summary>Titel &amp; Interpret anzeigen</summary>
             </details>
-            <input id="track-url" type="url" placeholder="Spotify-URL einfügen" autocomplete="off">
-            <button id="play-url" class="ghost">Abspielen</button>
-            <button id="logout" class="ghost">Abmelden</button>
+            <button id="next-card" class="primary">Weitere Karte scannen</button>
         </section>
         <p id="status" role="alert"></p>
     </main>
