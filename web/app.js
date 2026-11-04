@@ -211,9 +211,12 @@ function renderPlayerState(state) {
 }
 
 // Spoiler-Mechanik: Text der Karte bleibt unscharf, bis details offen ist
-spoilerEl.addEventListener("toggle", () =>
-    cardEl.classList.toggle("revealed", spoilerEl.open),
-);
+spoilerEl.addEventListener("toggle", () => {
+    cardEl.classList.toggle("revealed", spoilerEl.open);
+    spoilerEl.querySelector("summary").textContent = spoilerEl.open
+        ? "Titel & Interpret verbergen"
+        : "Titel & Interpret anzeigen";
+});
 
 // ---------- Zähler (kleines Spielgefühl, persistiert wie §8 die Tokens) ----------
 

@@ -55,7 +55,8 @@ h1 {
 
 /* ---------- Buttons ---------- */
 
-button {
+button,
+summary {
     font: inherit;
     font-weight: 700;
     border: none;
@@ -64,11 +65,13 @@ button {
     transition: transform 0.15s, box-shadow 0.2s, background 0.2s, color 0.2s;
 }
 
-button:active {
+button:active,
+summary:active {
     transform: scale(0.96);
 }
 
-button:focus-visible {
+button:focus-visible,
+summary:focus-visible {
     outline: 2px solid var(--green-bright);
     outline-offset: 2px;
 }
@@ -196,11 +199,18 @@ input:focus {
 
 details {
     margin-top: 16px;
+    text-align: center; /* summary als zentrierter Button */
 }
 
+/* Dreieck-Marker des summary aus (Chrome/Firefox: list-style, Safari: Pseudo) */
 summary {
-    cursor: pointer;
     color: var(--text-dim);
+    display: inline-block;
+    list-style: none;
+}
+
+summary::-webkit-details-marker {
+    display: none;
 }
 
 #next-card {
