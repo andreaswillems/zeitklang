@@ -315,7 +315,10 @@ document.getElementById("login-button").addEventListener("click", login);
 document.getElementById("logout").addEventListener("click", logout);
 document
     .getElementById("next-card")
-    .addEventListener("click", () => show(scanSection));
+    .addEventListener("click", () => {
+        window.player?.pause(); // Karte ist durch → Wiedergabe aus
+        show(scanSection);
+    });
 document.getElementById("play-url").addEventListener("click", () => {
     window.player?.activateElement(); // iOS: braucht einen User-Tap (§5.5)
     playScannedText(document.getElementById("track-url").value);
