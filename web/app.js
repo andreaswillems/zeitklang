@@ -1,0 +1,297 @@
+// Spotify-Login (PKCE) + QR-Scan + Wiedergabe per Web Playback SDK
+// — docs/pwa-spezifikation.md §3/§4/§5.
+
+const AUTHORIZE_URL = "https://accounts.spotify.com/authorize";
+const TOKEN_URL = "https://accounts.spotify.com/api/token";
+const PLAY_URL = "https://api.spotify.com/v1/me/player/play";
+// Access-Token flüchtig in sessionStorage, Refresh-Token dauerhaft in
+// localStorage (shortcut §8: bei XSS auslesbar — nur privat auf eigenem Gerät).
+const KEYS = {
+    access: "zeitklang_access",
+    expiresAt: "zeitklang_expires_at",
+    refresh: "zeitklang_refresh",
+    verifier: "zeitklang_verifier",
+    state: "zeitklang_state",
+};
+
+const loginSection = document.getElementById("login");
+const scanSection = document.getElementById("scan");
+const statusEl = document.getElementById("status");
+const resultEl = document.getElementById("result");
+const trackEl = document.getElementById("track");
+const spoilerEl = document.getElementById("spoiler");
+const playPauseEl = document.getElementById("toggle");
+const scanner = new Html5Qrcode("reader");
+
+// ---------- Auth (PKCE), Spezifikation §3 ----------
+
+function randomString(length) {
+    const chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+    const bytes = crypto.getRandomValues(new Uint8Array(length));
+    return Array.from(bytes, (b) => chars[b % chars.length]).join("");
+}
+
+function base64url(buffer) {
+    return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+}
+
+async function pkceChallenge(verifier) {
+    const hash = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(verifier),
+    );
+    return base64url(hash);
+}
+
+async function login() {
+    statusEl.textContent = "";
+    const verifier = randomString(64);
+    const state = randomString(16);
+    sessionStorage.setItem(KEYS.verifier, verifier);
+    sessionStorage.setItem(KEYS.state, state);
+    const params = new URLSearchParams({
+        client_id: SPOTIFY_CLIENT_ID,
+        response_type: "code",
+        redirect_uri: redirectUri(),
+        scope: AUTH_SCOPES,
+        code_challenge_method: "S256",
+        code_challenge: await pkceChallenge(verifier),
+        state,
+    });
+    location.href = `${AUTHORIZE_URL}?${params}`;
+}
+
+async function requestToken(body) {
+    const response = await fetch(TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(body).toString(),
+    });
+    if (!response.ok) {
+        throw new Error(`Token-Endpunkt antwortete mit ${response.status}`);
+    }
+    const tokens = await response.json();
+    sessionStorage.setItem(KEYS.access, tokens.access_token);
+    // 30 s Puffer, damit ein Token kurz vor Ablauf nicht mehr verwendet wird
+    sessionStorage.setItem(
+        KEYS.expiresAt,
+        String(Date.now() + (tokens.expires_in - 30) * 1000),
+    );
+    if (tokens.refresh_token) {
+        localStorage.setItem(KEYS.refresh, tokens.refresh_token);
+    }
+}
+
+// Wertet ?code=…/?error=… aus, egal auf welchem Pfad (§3.3: lokal /callback,
+// auf Pages die Site-Root).
+async function handleRedirect() {
+    const params = new URLSearchParams(location.search);
+    const code = params.get("code");
+    const error = params.get("error");
+    if (!code && !error) return;
+    history.replaceState(null, "", location.pathname); // Code ist einmalig
+    if (error) throw new Error(`Spotify: ${error}`);
+    if (params.get("state") !== sessionStorage.getItem(KEYS.state)) {
+        throw new Error("Ungültiger state (CSRF-Schutz) — Login abgebrochen");
+    }
+    const verifier = sessionStorage.getItem(KEYS.verifier);
+    sessionStorage.removeItem(KEYS.state);
+    sessionStorage.removeItem(KEYS.verifier);
+    await requestToken({
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: redirectUri(),
+        client_id: SPOTIFY_CLIENT_ID,
+        code_verifier: verifier,
+    });
+}
+
+// §3.5: gültiges Access-Token → startklar; abgelaufen + Refresh-Token →
+// refreshen; sonst null (Login-Button zeigen).
+async function getValidToken() {
+    const access = sessionStorage.getItem(KEYS.access);
+    if (access && Date.now() < Number(sessionStorage.getItem(KEYS.expiresAt))) {
+        return access;
+    }
+    const refresh = localStorage.getItem(KEYS.refresh);
+    if (!refresh) return null;
+    await requestToken({
+        grant_type: "refresh_token",
+        refresh_token: refresh,
+        client_id: SPOTIFY_CLIENT_ID,
+    });
+    return sessionStorage.getItem(KEYS.access);
+}
+
+function logout() {
+    sessionStorage.removeItem(KEYS.access);
+    sessionStorage.removeItem(KEYS.expiresAt);
+    localStorage.removeItem(KEYS.refresh);
+    accessToken = null;
+    window.deviceId = null;
+    window.player?.disconnect();
+    window.player = null;
+    show(loginSection);
+}
+
+// ---------- Web Playback SDK, Spezifikation §5 ----------
+
+let sdkReady = false;
+let accessToken = null;
+
+// Muss global sein, bevor das SDK-Script lädt (Script-Tag steht nach app.js).
+window.onSpotifyWebPlaybackSDKReady = () => {
+    sdkReady = true;
+    createPlayer();
+};
+
+function createPlayer() {
+    if (!sdkReady || !accessToken || window.player) return;
+    window.player = new Spotify.Player({
+        name: "Zeitklang PWA",
+        getOAuthToken: (cb) => getValidToken().then(cb),
+        volume: 0.8,
+    });
+    window.player.addListener("ready", ({ device_id }) => {
+        window.deviceId = device_id;
+    });
+    window.player.addListener("player_state_changed", renderPlayerState);
+    window.player.addListener("initialization_error", ({ message }) => {
+        statusEl.textContent = "Player-Fehler: " + message;
+    });
+    window.player.addListener("authentication_error", () => {
+        statusEl.textContent = "Authentifizierung fehlgeschlagen — bitte neu anmelden.";
+    });
+    window.player.addListener("account_error", () => {
+        statusEl.textContent = "Spotify Premium erforderlich.";
+    });
+    window.player.addListener("playback_error", ({ message }) => {
+        statusEl.textContent = "Wiedergabe-Fehler: " + message;
+    });
+    window.player.connect();
+}
+
+function renderPlayerState(state) {
+    if (!state) return;
+    const track = state.track_window.current_track;
+    trackEl.textContent = `${track.name} — ${track.artists
+        .map((a) => a.name)
+        .join(", ")}`;
+    playPauseEl.hidden = false;
+    playPauseEl.textContent = state.paused ? "▶" : "⏸";
+}
+
+// §4: Track-ID aus open.spotify.com/track/<id>, spotify:track:<id>
+// oder der künftigen Route /play/<id> extrahieren.
+function trackIdFrom(text) {
+    const match = text.match(
+        /(?:open\.spotify\.com\/track\/|spotify:track:|\/play\/)([A-Za-z0-9]{22})/,
+    );
+    return match ? match[1] : null;
+}
+
+async function playTrack(trackId) {
+    if (!window.deviceId) {
+        statusEl.textContent = "Player noch nicht verbunden — kurz warten, dann erneut.";
+        return;
+    }
+    spoilerEl.open = false; // neuer Track → Lösung wieder verdecken
+    const play = async () =>
+        fetch(`${PLAY_URL}?device_id=${window.deviceId}`, {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${await getValidToken()}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ uris: [`spotify:track:${trackId}`] }),
+        });
+    let response = await play();
+    if (response.status === 401) {
+        // Token lief unterwegs ab — Access-Token verwerfen, getValidToken
+        // greift dann zum Refresh-Token, einmal wiederholen (§5.6).
+        sessionStorage.removeItem(KEYS.access);
+        sessionStorage.removeItem(KEYS.expiresAt);
+        response = await play();
+    }
+    if (response.ok) {
+        statusEl.textContent = "";
+        return;
+    }
+    const messages = {
+        401: "Session abgelaufen — bitte neu anmelden.",
+        403: "Fehlende Scopes — bitte neu anmelden.",
+        404: "Kein aktives Gerät — Player verbindet noch, bitte erneut versuchen.",
+        412: "Spotify Premium erforderlich.",
+    };
+    statusEl.textContent =
+        messages[response.status] ??
+        `Wiedergabe fehlgeschlagen (HTTP ${response.status}).`;
+}
+
+function playScannedText(text) {
+    const trackId = trackIdFrom(text);
+    if (!trackId) {
+        resultEl.textContent = "Kein Spotify-Track erkannt: " + text;
+        return;
+    }
+    resultEl.textContent = "";
+    playTrack(trackId);
+}
+
+// ---------- UI-Zustände (§6) ----------
+
+function show(section) {
+    loginSection.hidden = section !== loginSection;
+    scanSection.hidden = section !== scanSection;
+}
+
+async function init() {
+    try {
+        await handleRedirect();
+        accessToken = await getValidToken();
+        if (accessToken) {
+            createPlayer();
+            show(scanSection);
+        } else {
+            show(loginSection);
+        }
+    } catch (err) {
+        show(loginSection);
+        statusEl.textContent = "Login fehlgeschlagen: " + err.message;
+    }
+}
+
+document.getElementById("login-button").addEventListener("click", login);
+document.getElementById("logout").addEventListener("click", logout);
+document.getElementById("play-url").addEventListener("click", () => {
+    window.player?.activateElement(); // iOS: braucht einen User-Tap (§5.5)
+    playScannedText(document.getElementById("track-url").value);
+});
+playPauseEl.addEventListener("click", () => window.player?.togglePlay());
+init();
+
+// ---------- QR-Scan (§4, aus dem Durchstich) ----------
+
+document.getElementById("start").addEventListener("click", () => {
+    window.player?.activateElement(); // iOS: Wiedergabe braucht einen User-Tap (§5.5)
+    scanner
+        .start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
+            (decodedText) => {
+                playScannedText(decodedText);
+                scanner.stop();
+            },
+            () => {
+                // pro Frame ohne Treffer — ignorieren
+            },
+        )
+        .catch((err) => {
+            // Kamera braucht HTTPS oder localhost, docs/durchstich.md §4.
+            resultEl.textContent = "Kamera nicht verfügbar: " + err;
+        });
+});

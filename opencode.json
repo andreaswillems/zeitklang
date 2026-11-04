@@ -1,0 +1,15 @@
+{
+  "mcp": {
+    "servers": {
+      "agent-browser": {
+        "type": "local",
+        "command": [
+          "agent-browser",
+          "mcp",
+          "--tools",
+          "core"
+        ]
+      }
+    }
+  }
+}
