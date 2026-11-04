@@ -178,7 +178,11 @@ function createPlayer() {
     window.player.addListener("initialization_error", ({ message }) => {
         statusEl.textContent = "Player-Fehler: " + message;
     });
-    window.player.addListener("authentication_error", () => {
+    window.player.addListener("authentication_error", ({ message }) => {
+        // SDK meldet den Autoplay-Block des Browsers als authentication_error
+        // ("Browser prevented autoplay…") — activateElement() beim ersten Tap
+        // löst das (§5.5), das ist kein echter Auth-Fehler.
+        if (/autoplay/i.test(message)) return;
         statusEl.textContent = "Authentifizierung fehlgeschlagen — bitte neu anmelden.";
     });
     window.player.addListener("account_error", () => {
