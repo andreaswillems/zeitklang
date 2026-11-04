@@ -320,6 +320,7 @@ document
     .getElementById("next-card")
     .addEventListener("click", () => {
         window.player?.pause(); // Karte ist durch → Wiedergabe aus
+        resultEl.textContent = ""; // altes Scan-Ergebnis zurücksetzen
         show(scanSection);
     });
 playPauseEl.addEventListener("click", () => window.player?.togglePlay());
