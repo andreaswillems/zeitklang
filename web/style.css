@@ -239,6 +239,9 @@ summary {
     border-radius: 12px;
     object-fit: cover;
     flex-shrink: 0;
+    /* Spoiler-Schutz wie bei Titel/Interpret: Cover verrät sonst das Album */
+    filter: blur(7px);
+    transition: filter 0.3s;
 }
 
 .np-meta {
@@ -267,6 +270,7 @@ summary {
     font-size: 0.9rem;
 }
 
+#now-playing.revealed #cover,
 #now-playing.revealed #np-title,
 #now-playing.revealed #np-artist {
     filter: none;

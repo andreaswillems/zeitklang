@@ -200,7 +200,8 @@ function renderPlayerState(state) {
     if (img) coverEl.src = img.url;
     cardEl.classList.toggle("playing", !state.paused);
     playPauseEl.hidden = false;
-    playPauseEl.textContent = state.paused ? "▶" : "⏸";
+    // ▮▮ im selben Geometrie-Stil wie ▶ — ⏸ rendert je nach Plattform als Emoji
+    playPauseEl.textContent = state.paused ? "▶" : "▮▮";
     // Erster Player-State = Track läuft → Player-Ansicht zeigen (§6.3)
     show(playerSection);
 }
