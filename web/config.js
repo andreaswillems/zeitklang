@@ -5,8 +5,8 @@ const SPOTIFY_CLIENT_ID = "0bd9132274784897b4653e94e559b01a";
 const AUTH_SCOPES =
     "streaming user-read-playback-state user-modify-playback-state user-read-private";
 
-// Eintragen, sobald die PWA auf GitHub Pages liegt (Spezifikation §11).
-const PAGES_REDIRECT_URI = "https://<user>.github.io/zeitklang/";
+// Pages-Root-URL (Spezifikation §11).
+const PAGES_REDIRECT_URI = "https://andreaswillems.github.io/zeitklang/";
 
 function redirectUri() {
     // Lokal via `zeitklang serve` (TLS durch mkcert): https-Callback auf 127.0.0.1,

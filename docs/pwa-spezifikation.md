@@ -15,7 +15,7 @@
 | Frage | Entscheidung |
 |---|---|
 | Wo liegt die App? | Statisch in `web/`, ausgeliefert per neuem CLI-Befehl `zeitklang serve` |
-| Redirect-URIs | Lokal: `https://127.0.0.1:8080/callback` (`zeitklang serve` liefert seit dem Durchstich TLS via mkcert, Port 8080). Pages: `https://<user>.github.io/<repo>/` (Site-Root, siehe §11) — beide URIs in einer Spotify-App registriert |
+| Redirect-URIs | Lokal: `https://127.0.0.1:8080/callback` (`zeitklang serve` liefert seit dem Durchstich TLS via mkcert, Port 8080). Pages: `https://andreaswillems.github.io/zeitklang/` (Site-Root, siehe §11) — beide URIs in einer Spotify-App registriert |
 | Auth-Flow | Authorization Code + **PKCE** (Public Client; ein Client Secret gibt es im Browser nicht) |
 | Scopes | `streaming user-read-playback-state user-modify-playback-state user-read-private` |
 | QR-Inhalt | unverändert `https://open.spotify.com/track/<id>` (wie `cards.py` heute druckt) — die PWA extrahiert die Track-ID per Regex, `cards.py` bleibt unangetastet |
@@ -153,14 +153,14 @@ SDK streamt ohne Premium nicht.
 4. Seiten-Reload → dank Refresh Token ohne erneuten Login startklar.
 5. Ohne Premium: Scan → Play → lesbare Meldung „Premium erforderlich".
 6. PWA installierbar (Manifest + Icons + SW aktiv; `127.0.0.1` gilt als sicherer Kontext).
-7. Nach Merge auf `main`: `https://<user>.github.io/<repo>/` lädt die PWA per HTTPS
+7. Nach Merge auf `main`: `https://andreaswillems.github.io/zeitklang/` lädt die PWA per HTTPS
    (Pages), Login mit der Pages-Redirect-URI funktioniert, Scan + Play wie lokal.
 8. iOS-Safari (Pages-URL): Login + QR-Scan (`html5-qrcode`) + Wiedergabe funktionieren;
    ggf. nach dem Scan ein Tap auf Play nötig (§8).
 
 ## 11. Hosting auf GitHub Pages (HTTPS)
 
-Ziel: die statische PWA unter `https://<user>.github.io/<repo>/` — HTTPS automatisch,
+Ziel: die statische PWA unter `https://andreaswillems.github.io/zeitklang/` — HTTPS automatisch,
 damit sicherer Kontext (Kamera + Service Worker) gegeben ist.
 
 1. **Workflow** `.github/workflows/pages.yml` — deployed `web/` bei jedem Push auf `main`:
@@ -171,6 +171,7 @@ damit sicherer Kontext (Kamera + Service Worker) gegeben ist.
      push:
        branches: [main]
    permissions:
+     contents: read
      pages: write
      id-token: write
    concurrency:
@@ -192,7 +193,7 @@ damit sicherer Kontext (Kamera + Service Worker) gegeben ist.
    ```
 
    Einmalig im Repo: Settings → Pages → Source: „GitHub Actions".
-2. **Redirect-URI**: `https://<user>.github.io/<repo>/` zusätzlich im Spotify-Dashboard
+2. **Redirect-URI**: `https://andreaswillems.github.io/zeitklang/` zusätzlich im Spotify-Dashboard
    registrieren. Spotify hängt `?code=…` an die Root-URL an; Pages liefert dafür direkt
    `index.html` — `app.js` fängt den Code dort ab (siehe §3).
 3. **Base-Pfad**: Projekt-Pages liegen unter `/<repo>/` — deshalb überall relative Pfade

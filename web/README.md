@@ -6,7 +6,7 @@ Hier entsteht die zukünftige **PWA**, mit der die QR-Codes der Karten gescannt 
 
 **Umgesetzt:** Durchstich (LAN-Hosting + QR-Scan), Spotify-Login (§3) und Wiedergabe per Web Playback SDK (§5). Offen: PWA-Shell (§7) und Hosting auf GitHub Pages (§11).
 
-Dateien laut Spezifikation (alles statisch; lokal via `zeitklang serve` auf Port 8080, produktiv via GitHub Pages mit HTTPS — Spezifikation §11):
+Dateien laut Spezifikation (alles statisch; lokal via `zeitklang serve` auf Port 8080, produktiv via GitHub Pages: https://andreaswillems.github.io/zeitklang/ — Spezifikation §11):
 
 ```
 web/

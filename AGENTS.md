@@ -16,6 +16,7 @@
 - `data/songs.json` — song collection committed to the repo.
 - `output/` — generated artifacts (gitignored, e.g. the cards PDF).
 - `web/` — static assets of the PWA (QR scanner + song playback), local via `zeitklang serve`, hosted on GitHub Pages (HTTPS), see `web/README.md` and `docs/pwa-spezifikation.md` §11.
+- `.github/workflows/pages.yml` — deployed `web/` bei jedem Push auf `main` zu GitHub Pages (Settings → Pages → Source: „GitHub Actions").
 - `app/tests/` — pytest tests. `README.md` (German) is the source of truth for the project idea — read it before planning.
 
 ## Project concept (from README.md)

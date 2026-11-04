@@ -48,7 +48,7 @@ Die Wiedergabe läuft per **Web Playback SDK**: Der Browser wird zum Spotify-Con
 
 Der Login läuft als Authorization-Code-Flow mit PKCE direkt im Browser (kein Client Secret in der Web-App, siehe `docs/pwa-spezifikation.md` §3). **Einmalig im Spotify-Dashboard** die Redirect-URI `https://127.0.0.1:8080/callback` registrieren. Access-Token in sessionStorage, Refresh-Token in localStorage → Reload bleibt angemeldet, „Abmelden" räumt beide Speicher.
 
-**Wichtig:** Der Login funktioniert aktuell nur lokal am Mac (127.0.0.1) — Spotify erlaubt keine LAN-IPs als Redirect-URI. Das Handy folgt mit dem Hosting auf GitHub Pages (`docs/pwa-spezifikation.md` §11).
+**Handy:** Der Login läuft über GitHub Pages — **https://andreaswillems.github.io/zeitklang/** —, weil Spotify keine LAN-IPs als Redirect-URI erlaubt (`docs/pwa-spezifikation.md` §11). Dafür einmalig die Pages-URL im Spotify-Dashboard als Redirect-URI registrieren.
 
 **Wichtig:** Browser geben die Kamera nur in einem sicheren Kontext frei (HTTPS oder localhost). Deshalb liefert `zeitklang serve` automatisch HTTPS über [mkcert](https://github.com/FiloSottile/mkcert) aus, sofern installiert (`brew install mkcert && mkcert -install`); ohne mkcert läuft nur HTTP mit Warnung. Am Mac dann via `https://localhost:8080` vortesten.
 
