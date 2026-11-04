@@ -1,6 +1,6 @@
 # AGENTS.md
 
-> 📖 **Workflow-Dokumentation:** Siehe [`docs/workflow.md`](docs/workflow.md) für den kompletten Prozess von Song-Sammlung bis QR-Code-PDF. Weitere Doku: [`docs/spotify-client.md`](docs/spotify-client.md), [`docs/web-variante.md`](docs/web-variante.md), [`docs/pwa-spezifikation.md`](docs/pwa-spezifikation.md) (PWA: Spotify-Login + QR-Scan + Web Playback SDK in `web/`).
+> 📖 **Workflow-Dokumentation:** Siehe [`docs/workflow.md`](docs/workflow.md) für den kompletten Prozess von Song-Sammlung bis QR-Code-PDF. Weitere Doku: [`docs/spotify-client.md`](docs/spotify-client.md), [`docs/web-variante.md`](docs/web-variante.md), [`docs/pwa-spezifikation.md`](docs/pwa-spezifikation.md) (PWA: Spotify-Login + QR-Scan + Web Playback SDK in `web/`), [`docs/icons.md`](docs/icons.md) (App-Icons: Dateien + Umfärben per Hue-Shift).
 
 ## Repo state
 
