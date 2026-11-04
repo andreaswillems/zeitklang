@@ -101,6 +101,11 @@ button:focus-visible {
 
 /* ---------- Ansichten (Login / Scan / Player) ---------- */
 
+/* !important: display-Regeln wie #login überlagern sonst das hidden-Attribut */
+[hidden] {
+    display: none !important;
+}
+
 section:not([hidden]) {
     animation: view-in 0.25s ease;
 }
