@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 3826268ff882220bf8a1594a8db56649d01c2ba6)
 // Spotify-Login (PKCE) + QR-Scan + Wiedergabe per Web Playback SDK
 // — docs/pwa-spezifikation.md §3/§4/§5.
 
@@ -351,6 +352,12 @@ document
         window.player?.pause(); // Karte ist durch → Wiedergabe aus
         resultEl.textContent = ""; // altes Scan-Ergebnis zurücksetzen
         show(scanSection);
+        // #6 Stufe 1: Kamera im selben Tap neu starten — das spart den
+        // „Scan starten“-Klick pro weiterer Karte.
+        window.player?.activateElement(); // iOS: Wiedergabe braucht einen User-Tap (§5.5)
+        startScan().catch((err) => {
+            resultEl.textContent = "Kamera nicht verfügbar: " + err;
+        });
     });
 playPauseEl.addEventListener("click", () => window.player?.togglePlay());
 init();
@@ -368,7 +375,7 @@ async function applyTorch(on) {
     torchBtn.setAttribute("aria-pressed", String(on));
 }
 
-// Scanner-Start als eigene Funktion: „Scan starten“ und künftig „Weitere
+// Scanner-Start als eigene Funktion: „Scan starten“ und „Weitere
 // Karte scannen“ (#6 Stufe 1) laufen über denselben Code.
 async function startScan() {
     await scanner.start(
