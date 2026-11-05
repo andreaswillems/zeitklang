@@ -172,6 +172,27 @@ section:not([hidden]) {
     word-break: break-all;
 }
 
+/* Taschenlampen-Button (#3): Ghost-Optik, Icon im Textfluss;
+   [hidden] mit !important bleibt stärker als display:inline-flex. */
+#torch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+#torch svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+/* Aktiver Zustand: blauer Akzent statt wechselndem Text (State per aria-pressed) */
+#torch[aria-pressed="true"] {
+    color: var(--accent-bright);
+    border-color: var(--accent-bright);
+}
+
 details {
     margin-top: 16px;
     text-align: center; /* summary als zentrierter Button */
