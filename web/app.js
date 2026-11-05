@@ -216,8 +216,13 @@ function renderPlayerState(state) {
     if (img) coverEl.src = img.url;
     cardEl.classList.toggle("playing", !state.paused);
     playPauseEl.hidden = false;
-    // ▮▮ im selben Geometrie-Stil wie ▶ — ⏸ rendert je nach Plattform als Emoji
-    playPauseEl.textContent = state.paused ? "▶" : "▮▮";
+    // Icons + aria-label per Klasse/CSS wechseln (#1): ▶/▮▮/⏸ renderten je
+    // nach Plattform als Emoji, Screenreader hatten keinen sinnvollen Text.
+    playPauseEl.classList.toggle("paused", state.paused);
+    playPauseEl.setAttribute(
+        "aria-label",
+        state.paused ? "Wiedergabe fortsetzen" : "Wiedergabe pausieren",
+    );
     // Nur der erste State nach einem Play-Command zeigt die Player-Ansicht (§6.3)
     if (awaitingTrackState) {
         awaitingTrackState = false;
