@@ -166,7 +166,7 @@ const AUTH_ERROR_MSG = "Authentifizierung fehlgeschlagen — bitte neu anmelden.
 let authErrorTimer = null;
 // Play-Command angenommen → der NÄCHSTE State-Event gehört zum neuen Track und
 // zeigt die Player-Ansicht. Pause-Events (z. B. „Weitere Karte scannen")
-// springen sonst asynchron zurück und erfordern einen zweiten Klick.
+// springen sonst asynchron zurück und erforden einen zweiten Klick.
 let awaitingTrackState = false;
 
 // Muss global sein, bevor das SDK-Script lädt (Script-Tag steht nach app.js).
