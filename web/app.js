@@ -354,7 +354,16 @@ document.getElementById("start").addEventListener("click", () => {
     scanner
         .start(
             { facingMode: "environment" },
-            { fps: 10, qrbox: 250 },
+            {
+                fps: 10,
+                // #2: Scan-Rahmen dynamisch an die Videofläche anpassen
+                // (max. 250 px), sonst ist er auf schmalen Geräten breiter
+                // als das Kamerabild. min(w, h) schützt im Querformat.
+                qrbox: (w, h) => {
+                    const size = Math.min(250, Math.floor(Math.min(w, h) * 0.7));
+                    return { width: size, height: size };
+                },
+            },
             (decodedText) => {
                 playScannedText(decodedText);
                 scanner.stop();
