@@ -27,6 +27,8 @@ const titleEl = document.getElementById("np-title");
 const artistEl = document.getElementById("np-artist");
 const counterEl = document.getElementById("counter");
 const scanner = new Html5Qrcode("reader");
+// #3: Torch-Button — bleibt hidden, bis Torch-Support erkannt wurde.
+const torchBtn = document.getElementById("torch");
 
 // ---------- Auth (PKCE), Spezifikation §3 ----------
 
@@ -302,6 +304,12 @@ function playScannedText(text) {
         return;
     }
     resultEl.textContent = "✓ Track erkannt";
+    // #4: haptisches Feedback nach erfolgreichem Scan — bei Party-Lärm oder
+    // hektischem Kartengeben sonst leicht zu übersehen. Progressive
+    // Enhancement: navigator.vibrate fehlt z. B. in iOS Safari komplett —
+    // optional chaining, kein Fehler. #11: Der künftige Dubletten-Guard
+    // muss HIER andocken, damit ignorierte Scans nicht erneut vibrieren.
+    navigator.vibrate?.(80);
     localStorage.setItem(
         COUNT_KEY,
         String(Number(localStorage.getItem(COUNT_KEY) ?? 0) + 1),
@@ -349,31 +357,68 @@ init();
 
 // ---------- QR-Scan (§4, aus dem Durchstich) ----------
 
+// #3: Torch-Zustand als Modul-State, damit das Licht über mehrere Scans
+// hinweg erhalten bleibt (Koordination mit #6 Stufe 2: dort läuft der
+// Scanner kontinuierlich und darf den Torch-Zustand nicht verlieren).
+let torchOn = false;
+
+async function applyTorch(on) {
+    await scanner.applyVideoConstraints({ advanced: [{ torch: on }] });
+    torchOn = on;
+    torchBtn.setAttribute("aria-pressed", String(on));
+}
+
+// Scanner-Start als eigene Funktion: „Scan starten“ und künftig „Weitere
+// Karte scannen“ (#6 Stufe 1) laufen über denselben Code.
+async function startScan() {
+    await scanner.start(
+        { facingMode: "environment" },
+        {
+            fps: 10,
+            // #2: Scan-Rahmen dynamisch an die Videofläche anpassen
+            // (max. 250 px), sonst ist er auf schmalen Geräten breiter
+            // als das Kamerabild. min(w, h) schützt im Querformat.
+            qrbox: (w, h) => {
+                const size = Math.min(250, Math.floor(Math.min(w, h) * 0.7));
+                return { width: size, height: size };
+            },
+        },
+        (decodedText) => {
+            playScannedText(decodedText);
+            scanner.stop();
+            // Kamera ist aus → Torch-Button verbergen (torchOn bleibt erhalten)
+            torchBtn.hidden = true;
+        },
+        () => {
+            // pro Frame ohne Treffer — ignorieren
+        },
+    );
+    // #3: Torch-Support erst nach erfolgreichem Start prüfen — Button nur
+    // zeigen, wenn das Gerät die Kamera-LED wirklich steuern kann.
+    try {
+        const capabilities = scanner.getRunningTrackCapabilities();
+        if (capabilities?.torch) {
+            torchBtn.hidden = false;
+            if (torchOn) await applyTorch(true); // Zustand nach Neustart wiederherstellen
+        }
+    } catch {
+        // Capabilities nicht abrufbar → Button bleibt verborgen, kein Fehler
+    }
+}
+
 document.getElementById("start").addEventListener("click", () => {
     window.player?.activateElement(); // iOS: Wiedergabe braucht einen User-Tap (§5.5)
-    scanner
-        .start(
-            { facingMode: "environment" },
-            {
-                fps: 10,
-                // #2: Scan-Rahmen dynamisch an die Videofläche anpassen
-                // (max. 250 px), sonst ist er auf schmalen Geräten breiter
-                // als das Kamerabild. min(w, h) schützt im Querformat.
-                qrbox: (w, h) => {
-                    const size = Math.min(250, Math.floor(Math.min(w, h) * 0.7));
-                    return { width: size, height: size };
-                },
-            },
-            (decodedText) => {
-                playScannedText(decodedText);
-                scanner.stop();
-            },
-            () => {
-                // pro Frame ohne Treffer — ignorieren
-            },
-        )
-        .catch((err) => {
-            // Kamera braucht HTTPS oder localhost, docs/durchstich.md §4.
-            resultEl.textContent = "Kamera nicht verfügbar: " + err;
-        });
+    startScan().catch((err) => {
+        // Kamera braucht HTTPS oder localhost, docs/durchstich.md §4.
+        resultEl.textContent = "Kamera nicht verfügbar: " + err;
+    });
+});
+
+torchBtn.addEventListener("click", async () => {
+    try {
+        await applyTorch(!torchOn);
+    } catch {
+        // Umschalten doch nicht möglich (Support weggezogen) → still verbergen
+        torchBtn.hidden = true;
+    }
 });

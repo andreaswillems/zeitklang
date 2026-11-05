@@ -29,6 +29,12 @@
             <p id="counter"></p>
             <button id="start" class="primary">Scan starten</button>
             <div id="reader"></div>
+            <!-- #3: Taschenlampe für dunkle Umgebung; hidden bis der
+                 Torch-Support des Geräts erkannt wurde. -->
+            <button id="torch" class="ghost" hidden aria-pressed="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8v4l-2.5 3v11a1.5 1.5 0 0 1-3 0V9L8 6V2z"/></svg>
+                Licht
+            </button>
             <p id="result" role="status"></p>
             <button id="logout" class="ghost">Abmelden</button>
         </section>
