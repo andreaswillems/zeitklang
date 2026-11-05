@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: 3826268ff882220bf8a1594a8db56649d01c2ba6)
 // Spotify-Login (PKCE) + QR-Scan + Wiedergabe per Web Playback SDK
 // — docs/pwa-spezifikation.md §3/§4/§5.
 
