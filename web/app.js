@@ -412,7 +412,9 @@ function playScannedText(text) {
     if (trackId === lastScanTrackId && now - lastScanAt < SCAN_COOLDOWN_MS) return;
     lastScanTrackId = trackId;
     lastScanAt = now;
-    resultEl.textContent = "✓ Track erkannt";
+    // #53: keine Erfolgsmeldung — #result wird nur noch im
+    // Fehlerfall aktualisiert; Erfolg-Feedback kommt über Vibration (#4)
+    // und Mini-Player/Now-Playing.
     // #4: haptisches Feedback nach erfolgreichem Scan — bei Party-Lärm oder
     // hektischem Kartengeben sonst leicht zu übersehen. Progressive
     // Enhancement: navigator.vibrate fehlt z. B. in iOS Safari komplett —
