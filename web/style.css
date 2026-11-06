@@ -35,6 +35,8 @@ main {
 }
 
 header {
+    /* #38: Anker für den absolut positionierten Abmelden-Icon-Button. */
+    position: relative;
     margin-bottom: 28px;
 }
 
@@ -243,11 +245,44 @@ summary::-webkit-details-marker {
     display: none;
 }
 
+/* #38: Abmelden als runder Icon-Button oben rechts im Header — visuelles
+   Text-Label entfällt, der zugängliche Name bleibt (aria-label, s.
+   index.html). Ghost-Optik wie Torch/Chevron; [hidden] mit !important
+   (s.o.) bleibt stärker als display:flex. app.js zeigt den Button nur in
+   der Scan-Ansicht; das offene Player-Sheet (#37) legt sein Backdrop
+   darüber — schließen dann via Chevron/Backdrop-Tap. */
 #logout {
-    margin-top: 28px;
-    /* #7: Abstand nach unten, damit die fixe Mini-Player-Leiste den
-       Abmelden-Button nicht überdeckt. */
-    margin-bottom: 76px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border);
+}
+
+#logout:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+#logout svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+/* #7/#38: Der Abmelden-Button ist aus dem Scan-Fluss nach oben gewandert —
+   der untere Freiraum schützt jetzt das letzte Scan-Element davor, von
+   der fixen Mini-Player-Leiste überdeckt zu werden. */
+#scan {
+    padding-bottom: 76px;
 }
 
 #status {
