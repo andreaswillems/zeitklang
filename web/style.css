@@ -126,10 +126,32 @@ section:not([hidden]) {
     text-align: center;
     min-height: 55vh;
     min-height: 55dvh;
+    /* #56: Platz für den fixierten Anmelde-Button freihalten (Muster
+       #scan { padding-bottom }): 24 px Anstand + 52 px Button-Höhe +
+       Luft — der zentrierte Flow-Inhalt (hero-text, hint) bleibt auch
+       auf kleinen Screens sicher über der Daumenzone. */
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
 }
 
-#login .primary {
-    width: min(100%, 320px);
+/* #56: Anmelde-Button in die Einhand-Daumenzone — fixiert am
+   unteren Rand, Muster #start aus #45/#47 (safe-area über env(),
+   viewport-fit=cover ist gesetzt). Zentrierung per left/right +
+   margin: 0 auto statt transform, damit die globale :active-
+   Skalierung frei bleibt (Muster #45); Breite wie die Mini-Player-
+   Leiste (#7). min-height 52 px: Tap-Ziel über Apple-HIG-44 /
+   Material-48 — der einzige Primär-Button des Screens darf groß
+   sein. [hidden] der #login-Sektion blendet ihn mit aus (s.o.);
+   im Login sind Leiste/Sheet nie aktiv (#47-Invariante), z-index 10
+   hält die Ordnung nur konsistent. */
+#login-button {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    margin: 0 auto;
+    width: min(398px, calc(100vw - 32px));
+    min-height: 52px;
+    z-index: 10;
 }
 
 .hero-text {
