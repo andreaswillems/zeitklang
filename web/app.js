@@ -550,6 +550,12 @@ function openSheet() {
     miniPlayerEl.hidden = true; // Leiste wäre redundant zum Sheet
     playerSheet.hidden = false;
     sheetBackdrop.hidden = false;
+    // #61: Sheet öffnet immer enthüllt — die Zuweisung feuert das toggle-
+    // Event (der Listener synchronisiert Karte, #13-Cover-Animation und
+    // Mini-Player-Leiste, #7). Bewusst NACH dem Unhide: Auf display:none
+    // läuft keine Transition, sonst erschiene das Cover schon in voller
+    // Breite ohne #13-Animation — so wächst es parallel zur Sheet-Fahrt.
+    spoilerEl.open = true;
     requestAnimationFrame(() => {
         playerSheet.classList.add("open");
         sheetBackdrop.classList.add("open");
@@ -563,6 +569,11 @@ function openSheet() {
 function closeSheet(instant = false) {
     if (!sheetOpen) return;
     sheetOpen = false;
+    // #61: Schließen verhüllt immer — ein Reset für alle Pfade (Chevron,
+    // Backdrop-Tap, Logout instant, Scan-Schließweg aus playScannedText).
+    // Der toggle-Listener verhüllt Karte und Leiste synchron (#7); das
+    // open=false in playTrack bei neuem Track bleibt als No-Op erhalten.
+    spoilerEl.open = false;
     // #7: Leiste kommt zurück — #47: nur, wenn der Scanner läuft.
     miniPlayerEl.hidden = !trackLoaded || !scannerActive;
     playerSheet.classList.remove("open");
