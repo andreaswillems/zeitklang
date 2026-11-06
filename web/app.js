@@ -583,6 +583,10 @@ async function startScan() {
 function stopScan() {
     if (!scannerActive) return;
     scannerActive = false;
+    // #51: Beim Scanner-Stopp auch die Wiedergabe anhalten — der Close-
+    // Button beendet die Hör-Situation komplett. Der Player bleibt
+    // verbunden; der nächste Scan startet den nächsten Track direkt.
+    window.player?.pause();
     try {
         scanner.stop();
     } catch {
