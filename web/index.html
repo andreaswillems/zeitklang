@@ -36,6 +36,12 @@
     <header>
         <h1>Zeitklang</h1>
         <p class="tagline">Scannen · Hören · Einordnen</p>
+        <!-- #38: Abmelden als Icon-Button oben rechts — globales Element,
+             app.js blendet ihn nur in der Scan-Ansicht ein (show()); die
+             Login-Ansicht braucht kein Abmelden. -->
+        <button id="logout" hidden aria-label="Abmelden">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        </button>
     </header>
     <main>
         <!-- #8: Ladezustand — als einziger Bereich ohne hidden direkt
@@ -65,7 +71,6 @@
                 Licht
             </button>
             <p id="result" role="status"></p>
-            <button id="logout" class="ghost">Abmelden</button>
         </section>
         <!-- #37: Player als Bottom-Sheet über dem Scanner — kein View-Wechsel
              mehr. Now-Playing-Karte (inkl. #13-Enthüllung) und Spoiler leben

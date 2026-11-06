@@ -39,6 +39,9 @@ const counterEl = document.getElementById("counter");
 const scanner = new Html5Qrcode("reader");
 // #3: Torch-Button — bleibt hidden, bis Torch-Support erkannt wurde.
 const torchBtn = document.getElementById("torch");
+// #38: Abmelden-Icon-Button im Header — show() blendet ihn nur in der
+// Scan-Ansicht ein; in Login/Ladezustand bleibt er versteckt.
+const logoutBtn = document.getElementById("logout");
 // #7: Persistenter Mini-Player — kompakte Now-Playing-Leiste, solange ein
 // Track geladen ist. Tap auf die Infos öffnet das Player-Sheet (#37), der
 // Play/Pause-Button nutzt dieselbe Icon-Mechanik wie #1 im Player-Sheet.
@@ -443,6 +446,8 @@ function playScannedText(text) {
 function show(section) {
     loginSection.hidden = section !== loginSection;
     scanSection.hidden = section !== scanSection;
+    // #38: Abmelden-Icon oben rechts gehört zur Scan-Ansicht.
+    logoutBtn.hidden = section !== scanSection;
     // #8: Mit jeder Ziel-Ansicht endet der Ladezustand — egal ob nach
     // Token-Austausch, Token-Refresh oder Fehlerfall (Login + Meldung).
     loadingSection.hidden = true;
