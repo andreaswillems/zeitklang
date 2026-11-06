@@ -269,8 +269,8 @@ section:not([hidden]) {
 }
 
 /* #47: Großer, runder Play-Button anstelle des Text-Buttons. Auf Andreas'
-   Feedback (6. November 2026, IMG_2156 + Folgerückmeldung) füllt er 3/4
-   der Viewport-Breite aus (75 vw, bewusst unbegrenzt), das Play-Icon
+   Feedback (6. November 2026, IMG_2156 + Folgerückmeldung) füllt er die halbe
+   Viewport-Breite aus (50 vw, bewusst unbegrenzt), das Play-Icon
    skaliert proportional mit, und er sitzt MITTIG IM VIEWPORT/Browser-
    fenster — position: fixed statt absolute: Der Kamerabereich liegt unter
    dem Header, absolute Zentrierung dort ließe den Button zu hoch
@@ -290,8 +290,8 @@ section:not([hidden]) {
     inset: 0;
     margin: auto;
     z-index: 10;
-    width: 75vw;
-    height: 75vw;
+    width: 50vw;
+    height: 50vw;
     display: flex;
     align-items: center;
     justify-content: center;
