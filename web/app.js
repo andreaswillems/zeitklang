@@ -17,6 +17,10 @@ const KEYS = {
 const loginSection = document.getElementById("login");
 const scanSection = document.getElementById("scan");
 const playerSection = document.getElementById("player-view");
+// #8: Ladezustand — in index.html als einziger Bereich ohne hidden direkt
+// sichtbar (schon ab First Paint, ohne JS); show() blendet ihn mit der
+// ersten Ziel-Ansicht wieder aus.
+const loadingSection = document.getElementById("loading");
 const statusEl = document.getElementById("status");
 const resultEl = document.getElementById("result");
 const spoilerEl = document.getElementById("spoiler");
@@ -429,6 +433,9 @@ function show(section) {
     loginSection.hidden = section !== loginSection;
     scanSection.hidden = section !== scanSection;
     playerSection.hidden = section !== playerSection;
+    // #8: Mit jeder Ziel-Ansicht endet der Ladezustand — egal ob nach
+    // Token-Austausch, Token-Refresh oder Fehlerfall (Login + Meldung).
+    loadingSection.hidden = true;
     // #7: Mini-Player in Login- und Scan-Ansicht erreichbar, solange ein
     // Track geladen ist; in der Player-Ansicht wäre er redundant.
     miniPlayerEl.hidden = !trackLoaded || section === playerSection;
