@@ -46,6 +46,16 @@ const stopScanBtn = document.getElementById("scan-stop");
 // #38: Abmelden-Icon-Button im Header — show() blendet ihn nur in der
 // Scan-Ansicht ein; in Login/Ladezustand bleibt er versteckt.
 const logoutBtn = document.getElementById("logout");
+// #58: Login-Flow — Weiterleitungs-Zustand, Doppeltipp-Schutz und
+// Fehlerbereich mit „Erneut versuchen“ (Details bei login()/showLoginError).
+const loginBtn = document.getElementById("login-button");
+const loginLabelEl = document.getElementById("login-label");
+const loginErrorEl = document.getElementById("login-error");
+const loginErrorTextEl = document.getElementById("login-error-text");
+const loginRetryBtn = document.getElementById("login-retry");
+// #58: Doppeltipp-Schutz — disabled greift erst im nächsten Frame, das
+// Flag deckt auch das await-Fenster bis zum Redirect ab (s. login()).
+let redirecting = false;
 // #7: Persistenter Mini-Player — kompakte Now-Playing-Leiste, solange ein
 // Track geladen ist. Tap auf die Infos öffnet das Player-Sheet (#37), der
 // Play/Pause-Button nutzt dieselbe Icon-Mechanik wie #1 im Player-Sheet.
@@ -80,7 +90,36 @@ async function pkceChallenge(verifier) {
     return base64url(hash);
 }
 
+// #58: Gezielte Login-Fehlermeldungen (#10: Ursache + nächster Schritt,
+// keine Fachsprache, HTTP-Status nur via console.error in der Konsole).
+const LOGIN_GENERIC_MSG =
+    "Anmeldung fehlgeschlagen. Bitte Internetverbindung prüfen und erneut versuchen.";
+const LOGIN_DENIED_MSG =
+    "Anmeldung bei Spotify wurde abgebrochen. Tippe auf „Erneut versuchen“ und schließe die Anmeldung bei Spotify ab.";
+const LOGIN_STATE_MSG =
+    "Anmeldung aus Sicherheitsgründen abgebrochen. Bitte erneut versuchen.";
+const LOGIN_PREMIUM_MSG =
+    "Dein Account hat kein Spotify Premium. Zeitklang braucht Premium, damit die Musik auf deinem Handy spielt.";
+
+// #58: Login-Fehler im eigenen Bereich mit „Erneut versuchen“ zeigen statt
+// reiner Statuszeile — statusEl bleibt Queue-/SDK-Meldungen (#9) und dem
+// Auth-Hinweis vorbehalten.
+function showLoginError(message) {
+    statusEl.textContent = "";
+    loginErrorTextEl.textContent = message;
+    loginErrorEl.hidden = false;
+}
+
 async function login() {
+    // #58: Weiterleitungs-Zustand + Doppeltipp-Schutz — disabled/Flag als
+    // erste Aktion, damit auch das await-Fenster bis zum Redirect (PKCE-
+    // Challenge) gegen Doppeltaps geschützt ist. Zurückgesetzt wird der
+    // Zustand nur bei bfcache-Rückkehr (pageshow unten bei den Listenern).
+    if (redirecting) return;
+    redirecting = true;
+    loginBtn.disabled = true;
+    loginLabelEl.textContent = "Weiterleitung zu Spotify…";
+    loginErrorEl.hidden = true; // früheren Fehler verbergen
     statusEl.textContent = "";
     const verifier = randomString(64);
     const state = randomString(16);
@@ -129,9 +168,19 @@ async function handleRedirect() {
     const error = params.get("error");
     if (!code && !error) return;
     history.replaceState(null, "", location.pathname); // Code ist einmalig
-    if (error) throw new Error(`Spotify: ${error}`);
+    if (error) {
+        // #58: access_denied = Zustimmung bei Spotify abgebrochen — gezielte
+        // Meldung statt generischem „Login fehlgeschlagen“ (init() wählt
+        // err.userMsg für den Fehlerbereich aus).
+        const err = new Error(`Spotify: ${error}`);
+        err.userMsg =
+            error === "access_denied" ? LOGIN_DENIED_MSG : LOGIN_GENERIC_MSG;
+        throw err;
+    }
     if (params.get("state") !== sessionStorage.getItem(KEYS.state)) {
-        throw new Error("Ungültiger state (CSRF-Schutz) — Login abgebrochen");
+        const err = new Error("Ungültiger state (CSRF-Schutz) — Login abgebrochen");
+        err.userMsg = LOGIN_STATE_MSG; // #58
+        throw err;
     }
     const verifier = sessionStorage.getItem(KEYS.verifier);
     sessionStorage.removeItem(KEYS.state);
@@ -270,7 +319,13 @@ function createPlayer() {
         }, 3000);
     });
     window.player.addListener("account_error", () => {
-        statusEl.textContent = "Spotify Premium erforderlich.";
+        // #58: Definitives SDK-Ergebnis (Account ohne Premium — anders als der
+        // spurious authentication_error oben keine Verzögerung nötig): zurück
+        // auf den Login mit gezielter Meldung (Andreas-Entscheidung); logout()
+        // hält Session, Scanner und Sheet sauber. Die Premium-Badge mit Link
+        // (#57) steht auf demselben Screen.
+        logout();
+        showLoginError(LOGIN_PREMIUM_MSG);
     });
     window.player.addListener("playback_error", ({ message }) => {
         statusEl.textContent = "Wiedergabe-Fehler: " + message;
@@ -387,7 +442,7 @@ async function playTrack(trackId) {
         401: "Session abgelaufen — bitte neu anmelden.",
         403: "Fehlende Scopes — bitte neu anmelden.",
         404: "Kein aktives Gerät — Player verbindet noch, bitte erneut versuchen.",
-        412: "Spotify Premium erforderlich.",
+        412: LOGIN_PREMIUM_MSG, // #58: ausformuliert wie im Login-Fehlerbereich
     };
     statusEl.textContent =
         messages[response.status] ??
@@ -454,13 +509,29 @@ async function init() {
             show(loginSection);
         }
     } catch (err) {
+        // #10/#58: Fachdetails (HTTP, err.message) nur in die Konsole, in der
+        // UI steht die gezielte, handlungsanleitende Meldung.
+        console.error("Login fehlgeschlagen:", err);
         show(loginSection);
-        statusEl.textContent = "Login fehlgeschlagen: " + err.message;
+        showLoginError(err.userMsg ?? LOGIN_GENERIC_MSG);
     }
 }
 
-document.getElementById("login-button").addEventListener("click", login);
+loginBtn.addEventListener("click", login); // #58: Ref statt erneuter getElementById
 document.getElementById("logout").addEventListener("click", logout);
+// #58: „Erneut versuchen“ — einfacher Seiten-Reload (Andreas-Entscheidung):
+// handleRedirect() hat ?code/?error per replaceState aus der URL geräumt,
+// danach zeigt init() regulär den Login ohne OAuth-Altlasten.
+loginRetryBtn.addEventListener("click", () => location.reload());
+// #58: bfcache-Rückkehr (Zurück-Button nach dem Redirect): Der Button ist
+// noch disabled mit „Weiterleitung zu Spotify…“ — pageshow mit persisted
+// setzt ihn zurück, ein frischer Tap startet den Login erneut.
+window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    redirecting = false;
+    loginBtn.disabled = false;
+    loginLabelEl.textContent = "Mit Spotify anmelden";
+});
 // #37: „Weitere Karte scannen" ist entfallen — der Scanner läuft kontinuierlich
 // (#6 Stufe 2), ein neuer Scan schließt das offene Sheet automatisch. Die
 // frühere Pause-Aktion des Buttons entfällt damit: Der nächste Scan ersetzt
