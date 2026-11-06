@@ -180,14 +180,37 @@ body:has(#login:not([hidden])) header h1 {
     display: none;
 }
 
+/* #63: Wortmarke mit sanft laufendem Farb-Gradient (Andreas-Entscheidung:
+   laufender Gradient statt hue-rotate). Technik wie bisher
+   (background-clip: text), ergänzt um background-size: 300% und eine
+   animierte background-position: Start- = Endfarbe, deshalb nahtloser
+   Loop; 7,2 s = 3 × die 2,4-s-Equalizer-Periode (.login-eq) — Logo und
+   Deko laufen im selben Takt. Kontrast (AA): hellste Station #fff,
+   dunkelste Station var(--accent-bright) (≥ 7:1 auf --bg); bewusst kein
+   var(--accent) im animierten Verlauf — keine dunklen Durchgänge. Das
+   Header-h1 oben nutzt denselben Gradient-Look OHNE die Animation und
+   bleibt statisch. */
 .wordmark {
     margin: 0;
     font-size: clamp(2.4rem, 10vw, 3.2rem);
     letter-spacing: -0.03em;
-    background: linear-gradient(100deg, var(--accent-bright), #fff 65%);
+    background: linear-gradient(100deg,
+        var(--accent-bright), #93c5fd 30%, #fff 55%, #93c5fd 80%, var(--accent-bright));
+    background-size: 300% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    animation: wordmark-flow 7.2s linear infinite;
+}
+
+/* #63: Eine volle Gradient-Periode = genau eine Hintergrundbreite (300 %):
+   background-position von 0 % auf 150 % verschiebt den Verlauf um exakt
+   eine Periode (Position-% wirkt auf die Differenz von Container- und
+   Bildbreite, hier 2 × Elementbreite pro 100 %); Start- = Endfarbe
+   macht den Loop nahtlos. */
+@keyframes wordmark-flow {
+    from { background-position: 0% 0; }
+    to { background-position: 150% 0; }
 }
 
 /* #57: Dezente Equalizer-Deko unter der Wortmarke — ruhige Variante
@@ -929,6 +952,13 @@ summary::-webkit-details-marker {
     /* #57: Login-Equalizer steht still statt im 0.01-ms-Takt zu
        flackern — die Balken zeigen ihre statische Höhe (s.o.). */
     .login-eq span {
+        animation: none;
+    }
+
+    /* #63: Wortmarke-Gradient steht still statt im 0.01-ms-Takt zu
+       flackern (Muster .login-eq span, #57) — die Ruhelage zeigt den
+       Gradient wie bisher statisch und bleibt gut lesbar. */
+    .wordmark {
         animation: none;
     }
 }
