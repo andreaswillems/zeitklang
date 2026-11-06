@@ -2,7 +2,7 @@
 // — docs/pwa-spezifikation.md §3/§4/§5.
 
 const AUTHORIZE_URL = "https://accounts.spotify.com/authorize";
-const TOKEN_URL = "https://accounts.spotify.com/api/token";
+const TOKEN_URL = "https://api.spotify.com/api/token";
 const PLAY_URL = "https://api.spotify.com/v1/me/player/play";
 // Access-Token flüchtig in sessionStorage, Refresh-Token dauerhaft in
 // localStorage (shortcut §8: bei XSS auslesbar — nur privat auf eigenem Gerät).
@@ -29,6 +29,15 @@ const counterEl = document.getElementById("counter");
 const scanner = new Html5Qrcode("reader");
 // #3: Torch-Button — bleibt hidden, bis Torch-Support erkannt wurde.
 const torchBtn = document.getElementById("torch");
+// #7: Persistenter Mini-Player — kompakte Now-Playing-Leiste, solange ein
+// Track geladen ist. Tap auf die Infos öffnet die Player-Ansicht, der
+// Play/Pause-Button nutzt dieselbe Icon-Mechanik wie #1 im Player-View.
+const miniPlayerEl = document.getElementById("mini-player");
+const miniOpenEl = document.getElementById("mini-open");
+const miniCoverEl = document.getElementById("mini-cover");
+const miniTitleEl = document.getElementById("mini-title");
+const miniArtistEl = document.getElementById("mini-artist");
+const miniToggleEl = document.getElementById("mini-toggle");
 
 // ---------- Auth (PKCE), Spezifikation §3 ----------
 
@@ -153,6 +162,8 @@ function logout() {
     window.deviceId = null;
     window.player?.disconnect();
     window.player = null;
+    trackLoaded = false; // #7: Mini-Player verschwindet mit der Session
+    miniPlayerEl.hidden = true;
     show(loginSection);
 }
 
@@ -166,8 +177,10 @@ const AUTH_ERROR_MSG = "Authentifizierung fehlgeschlagen — bitte neu anmelden.
 let authErrorTimer = null;
 // Play-Command angenommen → der NÄCHSTE State-Event gehört zum neuen Track und
 // zeigt die Player-Ansicht. Pause-Events (z. B. „Weitere Karte scannen")
-// springen sonst asynchron zurück und erforden einen zweiten Klick.
+// springen sonst asynchron zurück und erfordern einen zweiten Klick.
 let awaitingTrackState = false;
+// #7: Erster State-Event = erster Track geladen → Mini-Player darf erscheinen.
+let trackLoaded = false;
 
 // Muss global sein, bevor das SDK-Script lädt (Script-Tag steht nach app.js).
 window.onSpotifyWebPlaybackSDKReady = () => {
@@ -211,9 +224,10 @@ function createPlayer() {
 function renderPlayerState(state) {
     if (!state) return;
     const track = state.track_window.current_track;
-    titleEl.textContent = track.name;
-    artistEl.textContent = track.artists.map((a) => a.name).join(", ");
+    const artistText = track.artists.map((a) => a.name).join(", ");
     const img = track.album.images[0];
+    titleEl.textContent = track.name;
+    artistEl.textContent = artistText;
     coverEl.hidden = !img;
     if (img) coverEl.src = img.url;
     cardEl.classList.toggle("playing", !state.paused);
@@ -225,6 +239,24 @@ function renderPlayerState(state) {
         "aria-label",
         state.paused ? "Wiedergabe fortsetzen" : "Wiedergabe pausieren",
     );
+    // #7: Mini-Player spiegelt denselben Zustand (Titel/Interpret bleiben
+    // unscharf — Spoiler-Schutz wie im Player-View, siehe style.css).
+    // Sichtbar ab dem ersten Track; ausgeblendet, solange die Player-Ansicht
+    // selbst zu sehen ist. #16: Der künftige aria-hidden-Sync zum Blur muss
+    // auch diese Texte abdecken; bis dahin gilt derselbe Stand wie im View.
+    miniCoverEl.hidden = !img;
+    if (img) miniCoverEl.src = img.url;
+    miniTitleEl.textContent = track.name;
+    miniArtistEl.textContent = artistText;
+    miniPlayerEl.classList.toggle("playing", !state.paused);
+    miniToggleEl.hidden = false;
+    miniToggleEl.classList.toggle("paused", state.paused);
+    miniToggleEl.setAttribute(
+        "aria-label",
+        state.paused ? "Wiedergabe fortsetzen" : "Wiedergabe pausieren",
+    );
+    trackLoaded = true;
+    miniPlayerEl.hidden = !playerSection.hidden;
     // Nur der erste State nach einem Play-Command zeigt die Player-Ansicht (§6.3)
     if (awaitingTrackState) {
         awaitingTrackState = false;
@@ -235,6 +267,9 @@ function renderPlayerState(state) {
 // Spoiler-Mechanik: Text der Karte bleibt unscharf, bis details offen ist
 spoilerEl.addEventListener("toggle", () => {
     cardEl.classList.toggle("revealed", spoilerEl.open);
+    // #7: Mini-Player deckt synchron mit auf/ab — sonst würde die kompakte
+    // Leiste den Song nach dem Aufdecken wieder „vergessen".
+    miniPlayerEl.classList.toggle("revealed", spoilerEl.open);
     spoilerEl.querySelector("summary").textContent = spoilerEl.open
         ? "Titel & Interpret verbergen"
         : "Titel & Interpret anzeigen";
@@ -324,6 +359,9 @@ function show(section) {
     loginSection.hidden = section !== loginSection;
     scanSection.hidden = section !== scanSection;
     playerSection.hidden = section !== playerSection;
+    // #7: Mini-Player in Login- und Scan-Ansicht erreichbar, solange ein
+    // Track geladen ist; in der Player-Ansicht wäre er redundant.
+    miniPlayerEl.hidden = !trackLoaded || section === playerSection;
 }
 
 async function init() {
@@ -359,6 +397,10 @@ document
         });
     });
 playPauseEl.addEventListener("click", () => window.player?.togglePlay());
+// #7: Mini-Player — Tap auf die Infos öffnet die Player-Ansicht, der
+// Play/Pause-Button steuert die Wiedergabe direkt.
+miniOpenEl.addEventListener("click", () => show(playerSection));
+miniToggleEl.addEventListener("click", () => window.player?.togglePlay());
 init();
 
 // ---------- QR-Scan (§4, aus dem Durchstich) ----------

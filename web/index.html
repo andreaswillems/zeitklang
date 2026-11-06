@@ -59,6 +59,22 @@
             </details>
             <button id="next-card" class="primary">Weitere Karte scannen</button>
         </section>
+        <!-- #7: Persistenter Mini-Player — aus jeder Ansicht erreichbar,
+             solange ein Track geladen ist; in der Player-Ansicht ausgeblendet
+             (redundant). Titel/Interpret bleiben hinter dem Spoiler-Blur. -->
+        <div id="mini-player" hidden>
+            <button id="mini-open" aria-label="Aktuellen Song in der Player-Ansicht anzeigen">
+                <img id="mini-cover" alt="" width="44" height="44">
+                <span class="mini-meta">
+                    <span id="mini-title"></span>
+                    <span id="mini-artist"></span>
+                </span>
+            </button>
+            <button id="mini-toggle" hidden aria-label="Wiedergabe fortsetzen">
+                <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+            </button>
+        </div>
         <p id="status" role="alert"></p>
     </main>
     <script src="config.js"></script>
