@@ -180,7 +180,11 @@ section:not([hidden]) {
 
 /* ---------- Scan (§6.2/§6.3) ---------- */
 
-#reader {
+/* #45: Anker-Wrapper für die Overlay-Buttons (#torch oben links,
+   #scan-stop oben rechts) über dem Kamerabild; der Abstand nach oben
+   wandert vom #reader hierher. */
+#reader-wrap {
+    position: relative;
     margin-top: 16px;
 }
 
@@ -197,18 +201,42 @@ section:not([hidden]) {
     word-break: break-all;
 }
 
-/* Taschenlampen-Button (#3): Ghost-Optik, Icon im Textfluss;
-   [hidden] mit !important bleibt stärker als display:inline-flex. */
-#torch {
-    display: inline-flex;
+/* #45: Overlay-Buttons über dem Kamerabild — Torch (#3) oben links,
+   Scan-Stopp oben rechts, runde Icon-Optik wie der Abmelden-Button (#38).
+   Beide sind nur sichtbar, solange der Scanner läuft (app.js); [hidden] mit
+   !important (s.o.) bleibt stärker als display:flex.
+   Notch-Sicherheit: #reader-wrap liegt im Flow unter Header + Body-Padding
+   (env(safe-area-inset-top), s.o.) — der 12-px-Abstand genügt daher, die
+   Notch kann das Overlay nicht erreichen. */
+#reader-wrap button {
+    position: absolute;
+    top: 12px;
+    width: 44px; /* min. Tap-Ziel (#45) */
+    height: 44px;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 14px;
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    color: #fff;
+    background: rgba(18, 18, 22, 0.72);
+    border: 1px solid var(--border);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    z-index: 5;
 }
 
-#torch svg {
-    width: 18px;
-    height: 18px;
+#torch {
+    left: 12px;
+}
+
+#scan-stop {
+    right: 12px;
+}
+
+#reader-wrap button svg {
+    width: 22px;
+    height: 22px;
     fill: currentColor;
 }
 
@@ -216,6 +244,23 @@ section:not([hidden]) {
 #torch[aria-pressed="true"] {
     color: var(--accent-bright);
     border-color: var(--accent-bright);
+}
+
+/* #45: „Scan starten“ in der Daumenzone — fix am unteren Rand, zentriert
+   auf Leisten-/Sheet-Breite (#7-Muster). bottom hebt ihn über die Mini-
+   Player-Leiste (beide z 10, Abstand statt Overlap); Backdrop (15) und
+   Sheet (20) liegen darüber — ein offenes Sheet verdeckt den Button.
+   Zentrierung per left/right + margin statt transform: transform bleibt
+   für die globale :active-Skalierung frei (Muster #13/#toggle). */
+#start {
+    position: fixed;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    width: min(398px, calc(100vw - 32px));
+    z-index: 10;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
 }
 
 details {
@@ -267,11 +312,11 @@ summary::-webkit-details-marker {
     fill: currentColor;
 }
 
-/* #7/#38: Der Abmelden-Button ist aus dem Scan-Fluss nach oben gewandert —
-   der untere Freiraum schützt jetzt das letzte Scan-Element davor, von
-   der fixen Mini-Player-Leiste überdeckt zu werden. */
+/* #7/#38/#45: Der untere Freiraum schützt die Scan-Inhalte davor, von den
+   fixen unteren Elementen überdeckt zu werden — Mini-Player-Leiste (≈ 74 px
+   über dem Rand) und „Scan starten“-Button (Unterkante ≈ 150 px). */
 #scan {
-    padding-bottom: 76px;
+    padding-bottom: 190px;
 }
 
 #status {
