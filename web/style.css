@@ -300,7 +300,9 @@ summary::-webkit-details-marker {
 }
 
 /* Play/Pause-Icons (#1): Inline-SVG statt ▶/▮▮ — identisch auf allen Plattformen.
-   fill: currentColor erbt die Button-Farbe; #7 (Mini-Player) nutzt sie mit. */
+   fill: currentColor erbt die Button-Farbe; #7 (Mini-Player) nutzt sie mit.
+   #29: Icon zeigt die NÄCHSTE AKTION, nicht den Zustand — laufend → Pause-Icon (⏸),
+   pausiert → Play-Icon (▶), konsistent zum dynamischen aria-label. */
 #toggle svg,
 #mini-toggle svg {
     width: 22px;
@@ -308,18 +310,21 @@ summary::-webkit-details-marker {
     fill: currentColor;
 }
 
-#toggle .icon-pause,
-#mini-toggle .icon-pause {
+/* Default (Wiedergabe läuft): Play-Icon aus, Pause-Icon sichtbar */
+#toggle .icon-play,
+#mini-toggle .icon-play {
     display: none;
 }
 
-#toggle.paused .icon-play,
-#mini-toggle.paused .icon-play {
-    display: none;
-}
-
+/* Pausiert: Pause-Icon aus … */
 #toggle.paused .icon-pause,
 #mini-toggle.paused .icon-pause {
+    display: none;
+}
+
+/* … Play-Icon an (Aktion „fortsetzen“) */
+#toggle.paused .icon-play,
+#mini-toggle.paused .icon-play {
     display: block;
 }
 
