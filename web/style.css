@@ -48,11 +48,6 @@ h1 {
     color: transparent;
 }
 
-.tagline {
-    margin: 4px 0 0;
-    color: var(--text-dim);
-}
-
 /* ---------- Buttons ---------- */
 
 button,
@@ -182,12 +177,6 @@ section:not([hidden]) {
 }
 
 /* ---------- Scan (§6.2/§6.3) ---------- */
-
-#counter {
-    margin: 0 0 14px;
-    color: var(--text-dim);
-    font-size: 0.9rem;
-}
 
 #reader {
     margin-top: 16px;
