@@ -249,6 +249,53 @@ body:has(#login:not([hidden])) header h1 {
     color: inherit;
 }
 
+/* ---------- #58: Login-Flow (Weiterleitung, Fehlerbereich) ---------- */
+
+/* #58: Weiterleitungs-Zustand — Button deaktiviert (Doppeltipp-Schutz,
+   „Weiterleitung zu Spotify…“ setzt app.js). opacity statt Farbwechsel,
+   die Spotify-Optik (#57) bleibt erkennbar; die globale :active-
+   Skalierung greift auf disabled ohnehin nicht. */
+#login-button:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+/* #58: Fehlerbereich mit „Erneut versuchen“ statt reiner Statuszeile —
+   Karte im Stil von badge/Now-Playing (Karten-Hintergrund, Rand), Warn-
+   Icon im Fehler-Ton von #status (#ff9999). [hidden] mit !important
+   (s.o.) blendet ihn aus; Breite wie Button/Leiste (#7/#56-Muster). */
+#login-error:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: min(398px, calc(100vw - 32px));
+    margin: 0;
+    padding: 16px;
+    text-align: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+}
+
+#login-error svg {
+    width: 22px;
+    height: 22px;
+    fill: #ff9999;
+    flex-shrink: 0;
+}
+
+#login-error p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* Retry-Button: Ghost-Optik (s.o.), etwas kompakter als summary/chevron */
+#login-error .ghost {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+}
+
 /* ---------- Ladezustand (#8) ---------- */
 
 /* Sichtbar ab First Paint (kein hidden in index.html), bis show() die
