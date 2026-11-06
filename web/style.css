@@ -955,9 +955,22 @@ body:has(#login:not([hidden])) header h1 {
    Fläche aus #47 — #start ist genau dann sichtbar, wenn der Scanner gestoppt
    ist. Ohne :has()-Support (iOS < 15.4) bleibt die Anleitung ausgeblendet
    (gleicher dokumentierter Fallback wie die Fläche aus #47). */
+/* Nachtrag (Andreas, 6. November 2026, nach Live-Feedback): Karte mittig
+   in der freien Fläche zwischen Header und Scannen-Button statt im 40-dvh-
+   Platzhalter (dort saß sie zu weit oben). Fixiertes Band: oben Header-Zone
+   (Body-Padding 20 px + h1 ca. 38 px + Header-Abstand 28 px = 88 px,
+   dokumentierte Näherung, plus Safe-Area), unten bis zur Oberkante des
+   fixierten Scannen-Buttons aus #62 (24 px + 52 px = 76 px, plus Safe-Area).
+   Breite wie main begrenzt (Body-Padding 16 px je Seite), Zentrierung per
+   left/right + margin (Muster #45/#56, kein transform). */
 #guide {
-    position: absolute;
-    inset: 0;
+    position: fixed;
+    top: calc(88px + env(safe-area-inset-top));
+    bottom: calc(76px + env(safe-area-inset-bottom));
+    left: calc(16px + env(safe-area-inset-left));
+    right: calc(16px + env(safe-area-inset-right));
+    max-width: 430px;
+    margin: 0 auto;
     display: none;
     align-items: center;
     justify-content: center;
