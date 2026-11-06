@@ -156,6 +156,17 @@ function logout() {
     clearTimeout(authErrorTimer);
     clearTimeout(queueTimer); // #9: wartenden Scan nicht in die neue Session rutschen lassen
     queuedTrackId = null;
+    // #6 Stufe 2: kontinuierlichen Scanner stoppen — die Kamera darf in der
+    // Login-Ansicht nicht weiterlaufen. Torch-Zustand bleibt erhalten (#3).
+    if (scannerActive) {
+        scannerActive = false;
+        try {
+            scanner.stop();
+        } catch {
+            // Kamera evtl. schon zu — kein Fehler
+        }
+        torchBtn.hidden = true;
+    }
     sessionStorage.removeItem(KEYS.access);
     sessionStorage.removeItem(KEYS.expiresAt);
     // Refresh-Token bleibt: Spotify stellt ihn nur bei neuer Zustimmung aus —
@@ -182,16 +193,28 @@ let authErrorTimer = null;
 // eine spezifischere SDK-Fehlermeldung (z. B. AUTH_ERROR_MSG) zu übergehen.
 const QUEUE_WAIT_MSG = "Verbinde mit Spotify — der Titel startet in Kürze.";
 const QUEUE_FAIL_MSG = "Verbindung zu Spotify fehlgeschlagen — bitte Seite neu laden.";
-// Play-Command angenommen → der NÄCHSTE State-Event gehört zum neuen Track und
-// zeigt die Player-Ansicht. Pause-Events (z. B. „Weitere Karte scannen")
-// springen sonst asynchron zurück und erfordern einen zweiten Klick.
-let awaitingTrackState = false;
+// #6 Stufe 2: Nach dem Scan bleibt die App in der Scan-Ansicht (kontinuierlicher
+// Loop, die Player-Ansicht öffnet sich nur über den Mini-Player). Der frühere
+// Auto-Wechsel (awaitingTrackState) ist entfallen — ein expliziter
+// „Runde fertig“-Moment ist laut Spielrunden-Feedback nicht nötig.
 // #7: Erster State-Event = erster Track geladen → Mini-Player darf erscheinen.
 let trackLoaded = false;
 // #9: Track-Queue — ein Scan, bevor das SDK ready ist, bricht nicht mehr ab,
 // sondern wird zwischengespeichert und im ready-Event automatisch abgespielt.
 let queuedTrackId = null;
 let queueTimer = null;
+// #6 Stufe 2: kontinuierlicher Scanner — die Kamera bleibt zwischen den Karten
+// an; scannerActive verhindert Doppel-Starts (html5-qrcode wirft sonst).
+let scannerActive = false;
+// #6 Stufe 2 / #11: Dubletten-Guard — im kontinuierlichen Modus feuert der
+// Decoder für dieselbe Karte jeden Frame. Gleicher Track innerhalb des
+// Zeitfensters wird ignoriert: kein Vibrieren, kein Neuzählen, kein Re-Play.
+// #11: Andockstelle für die Unique-Zählung (Track-ID-Set, Repeat-Semantik).
+let lastScanTrackId = null;
+let lastScanAt = 0;
+let lastInvalidScan = null;
+let lastInvalidAt = 0;
+const SCAN_COOLDOWN_MS = 5000;
 
 // Muss global sein, bevor das SDK-Script lädt (Script-Tag steht nach app.js).
 window.onSpotifyWebPlaybackSDKReady = () => {
@@ -281,11 +304,6 @@ function renderPlayerState(state) {
     );
     trackLoaded = true;
     miniPlayerEl.hidden = !playerSection.hidden;
-    // Nur der erste State nach einem Play-Command zeigt die Player-Ansicht (§6.3)
-    if (awaitingTrackState) {
-        awaitingTrackState = false;
-        show(playerSection);
-    }
 }
 
 // Spoiler-Mechanik: Text der Karte bleibt unscharf, bis details offen ist
@@ -357,7 +375,8 @@ async function playTrack(trackId) {
     }
     if (response.ok) {
         statusEl.textContent = "";
-        awaitingTrackState = true;
+        // #6 Stufe 2: bewusst kein Ansichtswechsel — die Scan-Ansicht bleibt
+        // aktiv, der Mini-Player (#7) zeigt den laufenden Song.
         return;
     }
     const messages = {
@@ -374,15 +393,27 @@ async function playTrack(trackId) {
 function playScannedText(text) {
     const trackId = trackIdFrom(text);
     if (!trackId) {
+        // #6 Stufe 2: ungültige QRs feuern im kontinuierlichen Modus jeden
+        // Frame — Meldung nur einmal pro Karte/Zeitfenster zeigen.
+        const now = Date.now();
+        if (text === lastInvalidScan && now - lastInvalidAt < SCAN_COOLDOWN_MS) return;
+        lastInvalidScan = text;
+        lastInvalidAt = now;
         resultEl.textContent = "Kein Spotify-Track erkannt: " + text;
         return;
     }
+    // #6 Stufe 2: Dubletten-Guard (Deklaration siehe Modul-Variablen) —
+    // ignorierte Frames zählen nicht, vibrieren nicht, spielen nicht neu.
+    const now = Date.now();
+    if (trackId === lastScanTrackId && now - lastScanAt < SCAN_COOLDOWN_MS) return;
+    lastScanTrackId = trackId;
+    lastScanAt = now;
     resultEl.textContent = "✓ Track erkannt";
     // #4: haptisches Feedback nach erfolgreichem Scan — bei Party-Lärm oder
     // hektischem Kartengeben sonst leicht zu übersehen. Progressive
     // Enhancement: navigator.vibrate fehlt z. B. in iOS Safari komplett —
-    // optional chaining, kein Fehler. #11: Der künftige Dubletten-Guard
-    // muss HIER andocken, damit ignorierte Scans nicht erneut vibrieren.
+    // optional chaining, kein Fehler. #11: Der Dubletten-Guard dockt darüber
+    // an, ignorierte Frames vibrieren nicht. Unique-Zählung folgt in #11.
     navigator.vibrate?.(80);
     localStorage.setItem(
         COUNT_KEY,
@@ -428,12 +459,14 @@ document
         window.player?.pause(); // Karte ist durch → Wiedergabe aus
         resultEl.textContent = ""; // altes Scan-Ergebnis zurücksetzen
         show(scanSection);
-        // #6 Stufe 1: Kamera im selben Tap neu starten — das spart den
-        // „Scan starten“-Klick pro weiterer Karte.
         window.player?.activateElement(); // iOS: Wiedergabe braucht einen User-Tap (§5.5)
-        startScan().catch((err) => {
-            resultEl.textContent = "Kamera nicht verfügbar: " + err;
-        });
+        // #6 Stufe 2: Der Scanner läuft kontinuierlich — nur neu starten,
+        // wenn er nicht aktiv ist (z. B. nach Kamera-Fehler oder Logout).
+        if (!scannerActive) {
+            startScan().catch((err) => {
+                resultEl.textContent = "Kamera nicht verfügbar: " + err;
+            });
+        }
     });
 playPauseEl.addEventListener("click", () => window.player?.togglePlay());
 // #7: Mini-Player — Tap auf die Infos öffnet die Player-Ansicht, der
@@ -455,9 +488,11 @@ async function applyTorch(on) {
     torchBtn.setAttribute("aria-pressed", String(on));
 }
 
-// Scanner-Start als eigene Funktion: „Scan starten“ und „Weitere
-// Karte scannen“ (#6 Stufe 1) laufen über denselben Code.
+// Scanner-Start als eigene Funktion: „Scan starten“ und „Weitere Karte
+// scannen“ laufen über denselben Code (#6 Stufe 2: Doppel-Starts werden
+// verhindert, der Scanner läuft kontinuierlich weiter).
 async function startScan() {
+    if (scannerActive) return; // #6 Stufe 2: bereits laufend — kein Neustart
     await scanner.start(
         { facingMode: "environment" },
         {
@@ -471,15 +506,16 @@ async function startScan() {
             },
         },
         (decodedText) => {
+            // #6 Stufe 2: kein stop() — die Kamera bleibt zwischen den Karten
+            // an, die nächste Karte braucht keinen Kamera-Neustart. Der
+            // Dubletten-Guard in playScannedText hält Frame-Wiederholungen fern.
             playScannedText(decodedText);
-            scanner.stop();
-            // Kamera ist aus → Torch-Button verbergen (torchOn bleibt erhalten)
-            torchBtn.hidden = true;
         },
         () => {
             // pro Frame ohne Treffer — ignorieren
         },
     );
+    scannerActive = true; // #6 Stufe 2: Kamera läuft jetzt kontinuierlich
     // #3: Torch-Support erst nach erfolgreichem Start prüfen — Button nur
     // zeigen, wenn das Gerät die Kamera-LED wirklich steuern kann.
     try {
