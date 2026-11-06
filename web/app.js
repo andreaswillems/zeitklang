@@ -38,6 +38,11 @@ const artistEl = document.getElementById("np-artist");
 const scanner = new Html5Qrcode("reader");
 // #3: Torch-Button — bleibt hidden, bis Torch-Support erkannt wurde.
 const torchBtn = document.getElementById("torch");
+// #45: „Scan starten“ unten in der Daumenzone — ausgeblendet, solange der
+// Scanner läuft; Overlay-Button „Scan stoppen“ über dem Kamerabild ist nur
+// bei aktivem Scanner sichtbar (Toggles in startScan/stopScan).
+const startBtn = document.getElementById("start");
+const stopScanBtn = document.getElementById("scan-stop");
 // #38: Abmelden-Icon-Button im Header — show() blendet ihn nur in der
 // Scan-Ansicht ein; in Login/Ladezustand bleibt er versteckt.
 const logoutBtn = document.getElementById("logout");
@@ -168,17 +173,10 @@ function logout() {
     clearTimeout(authErrorTimer);
     clearTimeout(queueTimer); // #9: wartenden Scan nicht in die neue Session rutschen lassen
     queuedTrackId = null;
-    // #6 Stufe 2: kontinuierlichen Scanner stoppen — die Kamera darf in der
-    // Login-Ansicht nicht weiterlaufen. Torch-Zustand bleibt erhalten (#3).
-    if (scannerActive) {
-        scannerActive = false;
-        try {
-            scanner.stop();
-        } catch {
-            // Kamera evtl. schon zu — kein Fehler
-        }
-        torchBtn.hidden = true;
-    }
+    // #6 Stufe 2/#45: kontinuierlichen Scanner stoppen — die Kamera darf in
+    // der Login-Ansicht nicht weiterlaufen. stopScan() blendet die Overlay-
+    // Buttons aus und „Scan starten“ wieder ein; Torch-Zustand bleibt (#3).
+    if (scannerActive) stopScan();
     sessionStorage.removeItem(KEYS.access);
     sessionStorage.removeItem(KEYS.expiresAt);
     // Refresh-Token bleibt: Spotify stellt ihn nur bei neuer Zustimmung aus —
@@ -553,6 +551,11 @@ async function startScan() {
         },
     );
     scannerActive = true; // #6 Stufe 2: Kamera läuft jetzt kontinuierlich
+    // #45: Während der Scanner läuft, ist „Scan starten“ ausgeblendet und
+    // das Stopp-Overlay sichtbar. Erst NACH dem Start verstecken — schlägt
+    // scanner.start() fehl, bleibt der Button sichtbar (kein Reset nötig).
+    startBtn.hidden = true;
+    stopScanBtn.hidden = false;
     // #3: Torch-Support erst nach erfolgreichem Start prüfen — Button nur
     // zeigen, wenn das Gerät die Kamera-LED wirklich steuern kann.
     try {
@@ -566,13 +569,35 @@ async function startScan() {
     }
 }
 
-document.getElementById("start").addEventListener("click", () => {
+// #45: Scanner manuell stoppen — Gegenstück zu startScan(). Ohne ihn liefe
+// die Kamera die ganze Session (Akku, Privacy-LED) und jede Karte im Bild
+// ersetzte sofort den laufenden Track. Torch-Zustand (torchOn) bleibt als
+// Modul-State erhalten (#3), applyTorch zieht ihn beim nächsten Start nach.
+function stopScan() {
+    if (!scannerActive) return;
+    scannerActive = false;
+    try {
+        scanner.stop();
+    } catch {
+        // Kamera evtl. schon zu — kein Fehler
+    }
+    stopScanBtn.hidden = true;
+    torchBtn.hidden = true;
+    startBtn.hidden = false; // #45: „Scan starten“ kehrt in die Daumenzone zurück
+}
+
+startBtn.addEventListener("click", () => {
     window.player?.activateElement(); // iOS: Wiedergabe braucht einen User-Tap (§5.5)
     startScan().catch((err) => {
         // Kamera braucht HTTPS oder localhost, docs/durchstich.md §4.
+        // #45: #start bleibt sichtbar — versteckt wird erst nach erfolgreichem
+        // Start (s. startScan), der Fehlerweg braucht keinen Reset.
         resultEl.textContent = "Kamera nicht verfügbar: " + err;
     });
 });
+
+// #45: Stopp per Overlay-Icon-Button über dem Kamerabild (oben rechts).
+stopScanBtn.addEventListener("click", stopScan);
 
 torchBtn.addEventListener("click", async () => {
     try {
