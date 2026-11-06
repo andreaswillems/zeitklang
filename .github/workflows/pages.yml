@@ -21,6 +21,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # deploy-pages@v4 bricht ab, wenn im Lauf mehrere "github-pages"-
+      # Artefakte liegen (z. B. nach Abbruch/Re-Run, Fehler s. Actions-Run #24:
+      # "Multiple artifacts named github-pages ... Artifact count is 3").
+      # Vor dem Upload alle vorhandenen Artefakte dieses Laufs löschen.
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              ...context.repo,
+              run_id: context.runId,
+            });
+            for (const a of artifacts.data.artifacts.filter(a => a.name === "github-pages")) {
+              await github.rest.actions.deleteArtifact({ ...context.repo, artifact_id: a.id });
+              core.info("Deleted stale artifact " + a.id);
+            }
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./web
