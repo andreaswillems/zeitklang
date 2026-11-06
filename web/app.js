@@ -2,7 +2,7 @@
 // — docs/pwa-spezifikation.md §3/§4/§5.
 
 const AUTHORIZE_URL = "https://accounts.spotify.com/authorize";
-const TOKEN_URL = "https://api.spotify.com/api/token";
+const TOKEN_URL = "https://accounts.spotify.com/api/token";
 const PLAY_URL = "https://api.spotify.com/v1/me/player/play";
 // Access-Token flüchtig in sessionStorage, Refresh-Token dauerhaft in
 // localStorage (shortcut §8: bei XSS auslesbar — nur privat auf eigenem Gerät).
