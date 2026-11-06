@@ -105,6 +105,37 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5,6.5v3h-3v-3H9.5 M11,5H5v6h6V5L11,5z M9.5,14.5v3h-3v-3H9.5 M11,13H5v6h6V13L11,13z M17.5,6.5v3h-3v-3H17.5 M19,5h-6v6 h6V5L19,5z M13,13h1.5v1.5H13V13z M14.5,14.5H16V16h-1.5V14.5z M16,13h1.5v1.5H16V13z M13,16h1.5v1.5H13V16z M14.5,17.5H16V19h-1.5 V17.5z M16,16h1.5v1.5H16V16z M17.5,14.5H19V16h-1.5V14.5z M17.5,17.5H19V19h-1.5V17.5z M22,7h-2V4h-3V2h5V7z M22,22v-5h-2v3h-3v2 H22z M2,22h5v-2H4v-3H2V22z M2,2v5h2V4h3V2H2z"/></svg>
                     <span>Scannen</span>
                 </button>
+                <!-- #70: Onboarding-Kurzanleitung im Platzhalter der Scan-
+                     Ansicht — nur bei gestopptem Scanner sichtbar (CSS-:has()
+                     analog zur Platzhalter-Fläche aus #47), verschwindet
+                     automatisch mit Scanner-Start; Pfeile rein dekorativ. -->
+                <div id="guide">
+                    <div class="guide-card">
+                        <p class="guide-title">So funktioniert’s</p>
+                        <ol class="guide-steps">
+                            <li>
+                                <span class="step-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5,6.5v3h-3v-3H9.5 M11,5H5v6h6V5L11,5z M9.5,14.5v3h-3v-3H9.5 M11,13H5v6h6V13L11,13z M17.5,6.5v3h-3v-3H17.5 M19,5h-6v6 h6V5L19,5z M13,13h1.5v1.5H13V13z M14.5,14.5H16V16h-1.5V14.5z M16,13h1.5v1.5H16V13z M13,16h1.5v1.5H13V16z M14.5,17.5H16V19h-1.5 V17.5z M16,16h1.5v1.5H16V16z M17.5,14.5H19V16h-1.5V14.5z M17.5,17.5H19V19h-1.5V17.5z M22,7h-2V4h-3V2h5V7z M22,22v-5h-2v3h-3v2 H22z M2,22h5v-2H4v-3H2V22z M2,2v5h2V4h3V2H2z"/></svg>
+                                </span>
+                                <span class="step-text"><strong>Karte scannen</strong><small>QR-Kärtchen vor die Kamera halten</small></span>
+                                <svg class="step-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                            </li>
+                            <li>
+                                <span class="step-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                                </span>
+                                <span class="step-text"><strong>Song hören</strong><small>Der Song spielt auf deinem Handy</small></span>
+                                <svg class="step-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+                            </li>
+                            <li>
+                                <span class="step-icon">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.41 11.58l-9-9C12.05 2.23 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.23 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
+                                </span>
+                                <span class="step-text"><strong>Titel einordnen</strong><small>Weißt du, welcher Song läuft?</small></span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
             </div>
             <p id="result" role="status"></p>
         </section>
