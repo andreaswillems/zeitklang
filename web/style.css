@@ -398,56 +398,69 @@ body:has(#login:not([hidden])) header h1 {
     border-color: var(--accent-bright);
 }
 
-/* #47: Großer, runder Play-Button anstelle des Text-Buttons. Auf Andreas'
-   Feedback (6. November 2026, IMG_2156 + Folgerückmeldung) füllt er die halbe
-   Viewport-Breite aus (50 vw, bewusst unbegrenzt), das Play-Icon
-   skaliert proportional mit, und er sitzt MITTIG IM VIEWPORT/Browser-
-   fenster — position: fixed statt absolute: Der Kamerabereich liegt unter
-   dem Header, absolute Zentrierung dort ließe den Button zu hoch
-   erscheinen. Zentrierung per inset + margin: auto (kein transform — das
-   bleibt für die globale :active-Skalierung frei, Muster #13/#toggle).
-   Wichtig: Selektor #reader-wrap #start (2 IDs) statt nur #start — sonst
-   gewinnt die Overlay-Regel #reader-wrap button (#45, ID + Element) bei
-   width/height/top/background/border und stutzt den Button auf 44 px
-   dunkel zurück (erster Screenshot-Fehler). Primär-Optik (blauer
-   Verlauf) mit weißem Play-Icon (#1-Pfad); border: none hebt die
-   Overlay-Optik auf. z-index 10 wie die Mini-Player-Leiste (die ist bei
-   sichtbarem Button ohnehin ausgeblendet, #47-Invariante). [hidden]
-   (s.o., !important) blendet ihn aus, solange der Scanner läuft — im
-   Login bleibt die ganze #scan-Sektion zu. */
+/* #62: Start-Button als breites Rechteck in der Daumenzone statt rundem
+   50-vw-Button (#47/#55/#50 — Viewport-Zentrierung entfällt). Muster
+   #login-button (#56): position: fixed unten, Zentrierung per left/right +
+   margin: 0 auto (kein transform — die globale :active-Skalierung bleibt
+   frei), Breite wie die Mini-Player-Leiste (#7), min-height 52 px Tap-Ziel;
+   QR-Icon + Text „Scannen“ (index.html): Der Button startet einen Scan,
+   keine Wiedergabe — deshalb ersetzt das QR-Icon das Play-SVG.
+   Selektor bleibt #reader-wrap #start (2 IDs): Der Button liegt im DOM
+   weiter im #reader-wrap (app.js-Ref unverändert), und nur so schlägt er
+   die Overlay-Regel #reader-wrap button (#45, ID + Element) sicher. Nach
+   der #49-Lehre muss JEDE geteilte Property hier überschrieben werden:
+   top: auto gegen top: 12px (position: fixed mit top UND bottom zöge den
+   Button sonst an den oberen Rand), height: auto gegen height: 44px,
+   border-radius: 999px und backdrop-filter: none gegen die Overlay-Optik.
+   Kein Konflikt mit der Mini-Player-Leiste: Beide sind nie gleichzeitig
+   sichtbar (#47-Invariante: Leiste ⇔ Track ∧ Sheet zu ∧ Scanner aktiv;
+   der Button nur bei gestopptem Scanner). Backdrop (15)/Sheet (20) über-
+   decken ihn bei offenem Sheet — der Scanner läuft dann, der Button ist
+   hidden. [hidden] (s.o., !important) blendet ihn aus, solange der
+   Scanner läuft. */
 #reader-wrap #start {
     position: fixed;
-    inset: 0;
-    margin: auto;
-    z-index: 10;
-    width: 50vw;
-    height: 50vw;
+    top: auto;
+    left: 16px;
+    right: 16px;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    margin: 0 auto;
+    width: min(398px, calc(100vw - 32px));
+    height: auto;
+    min-height: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
+    gap: 10px;
+    padding: 16px 24px;
+    font-size: 1.05rem;
     border: none;
-    border-radius: 50%;
+    border-radius: 999px;
     color: #fff;
     background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     box-shadow: 0 10px 34px rgba(59, 130, 246, 0.45);
+    z-index: 10;
 }
 
-/* Zwei ID-Selektoren, um gegen #reader-wrap button svg (s.u. in #45) zu
-   gewinnen. Das Icon skaliert proportional mit dem Button (45 % des
-   Durchmessers) statt in fixer Pixelgröße. */
+/* #62: Fixe Icon-Größe (24 px wie #login-button svg) statt 45 %-Skalierung
+   — der Button wächst nicht mehr mit dem Viewport. Zwei ID-Selektoren
+   bleiben nötig, um gegen #reader-wrap button svg (22 px, s.o. #45) zu
+   gewinnen. */
 #reader-wrap #start svg {
-    width: 45%;
-    height: 45%;
+    width: 24px;
+    height: 24px;
     fill: currentColor;
+    flex-shrink: 0;
 }
 
-/* #47: Platzhalter-Fläche nur, solange der Play-Button sichtbar ist
+/* #47/#62: Platzhalter-Fläche nur, solange der Start-Button sichtbar ist
    (Kamera aus) — mit laufendem Video bestimmt dessen Seitenverhältnis
-   die Höhe. Seit der Viewport-Zentrierung des Buttons (position: fixed)
-   muss sie ihn nicht mehr umschließen, 40dvh genügt wieder. Browser
-   ohne :has()-Support (iOS < 15.4) ignorieren die Fläche; der Button
-   bleibt trotzdem sichtbar und hängt mittig im Fenster. */
+   die Höhe. Seit #62 liegt der Button fixiert in der Daumenzone, die
+   Fläche umschließt ihn nicht mehr, 40dvh genügt (Andreas-Entscheidung,
+   #62). Browser ohne :has()-Support (iOS < 15.4) ignorieren die Fläche;
+   der Button bleibt trotzdem sichtbar. */
 #reader-wrap:has(#start:not([hidden])) {
     min-height: 40dvh;
 }
@@ -501,13 +514,12 @@ summary::-webkit-details-marker {
     fill: currentColor;
 }
 
-/* #7/#38/#45/#47: Der untere Freiraum schützt die Scan-Inhalte davor, von
-   der fixen Mini-Player-Leiste überdeckt zu werden (≈ 74 px über dem Rand).
-   Der Start-Button liegt mit #47 wieder im Flow (zentriert über der
-   Kamerafläche), die Leiste ist zudem nur bei laufendem Scanner sichtbar —
-   76 px genügen wieder. */
+/* #7/#38/#45/#62: Der untere Freiraum schützt die Scan-Inhalte davor, von
+   der fixen Mini-Player-Leiste überdeckt zu werden (≈ 74 px über dem Rand)
+   und seit #62 vom fixierten Start-Button in der Daumenzone (24 px Anstand
+   + 52 px Höhe + Luft, Muster #login/#56). */
 #scan {
-    padding-bottom: 76px;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
 }
 
 #status {

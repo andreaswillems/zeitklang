@@ -79,10 +79,11 @@
         </section>
         <!-- Seite 2: Scan (§6.2) -->
         <section id="scan" hidden>
-            <!-- #45/#47: Kamerabild + Overlay-Buttons in einem Anker-Wrapper —
+            <!-- #45/#47/#62: Kamerabild + Overlay-Buttons in einem Anker-Wrapper —
                  Torch oben links (#3), Scan-Stopp oben rechts (#45). Solange
                  der Scanner gestoppt ist, füllt eine Platzhalter-Fläche den
-                 Bereich und der runde Play-Button (#47) sitzt mittig darüber. -->
+                 Bereich; der Start-Button (#62) liegt fixiert in der Daumenzone
+                 unten (style.css). -->
             <div id="reader-wrap">
                 <div id="reader"></div>
                 <!-- #3: Taschenlampe für dunkle Umgebung; hidden bis der
@@ -90,16 +91,19 @@
                 <button id="torch" hidden aria-pressed="false" aria-label="Taschenlampe">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8v4l-2.5 3v11a1.5 1.5 0 0 1-3 0V9L8 6V2z"/></svg>
                 </button>
-                <!-- #45: Scanner manuell stoppen — Kamera aus, Play-Button
+                <!-- #45: Scanner manuell stoppen — Kamera aus, Start-Button
                      kehrt zurück; Muster wie Torch (#3). -->
                 <button id="scan-stop" hidden aria-label="Scan stoppen">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                 </button>
-                <!-- #47: Großer runder Play-Button anstelle des Text-Buttons,
-                     horizontal/vertikal über der Fläche zentriert (style.css);
-                     ausgeblendet, solange der Scanner läuft (app.js). -->
-                <button id="start" aria-label="Scan starten">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                <!-- #62: QR-Icon-Button mit Text „Scannen“ in der Daumenzone
+                     (style.css, Muster #login-button/#56); ausgeblendet, solange
+                     der Scanner läuft (app.js). Der sichtbare Text ist der
+                     zugängliche Name — ein aria-label entfällt bewusst
+                     (WCAG 2.5.3 „Label in Name“). -->
+                <button id="start">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5,6.5v3h-3v-3H9.5 M11,5H5v6h6V5L11,5z M9.5,14.5v3h-3v-3H9.5 M11,13H5v6h6V13L11,13z M17.5,6.5v3h-3v-3H17.5 M19,5h-6v6 h6V5L19,5z M13,13h1.5v1.5H13V13z M14.5,14.5H16V16h-1.5V14.5z M16,13h1.5v1.5H16V13z M13,16h1.5v1.5H13V16z M14.5,17.5H16V19h-1.5 V17.5z M16,16h1.5v1.5H16V16z M17.5,14.5H19V16h-1.5V14.5z M17.5,17.5H19V19h-1.5V17.5z M22,7h-2V4h-3V2h5V7z M22,22v-5h-2v3h-3v2 H22z M2,22h5v-2H4v-3H2V22z M2,2v5h2V4h3V2H2z"/></svg>
+                    <span>Scannen</span>
                 </button>
             </div>
             <p id="result" role="status"></p>
