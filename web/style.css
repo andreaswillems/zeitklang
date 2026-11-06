@@ -73,20 +73,6 @@ summary:focus-visible {
     outline-offset: 2px;
 }
 
-.primary {
-    display: block;
-    width: 100%;
-    padding: 16px 24px;
-    font-size: 1.05rem;
-    color: #0a1b33;
-    background: linear-gradient(180deg, var(--accent-bright), var(--accent));
-    box-shadow: 0 6px 28px rgba(59, 130, 246, 0.35);
-}
-
-.primary:hover {
-    box-shadow: 0 8px 34px rgba(59, 130, 246, 0.5);
-}
-
 .ghost {
     padding: 12px 22px;
     color: var(--text-dim);
@@ -154,16 +140,113 @@ section:not([hidden]) {
     z-index: 10;
 }
 
+/* ---------- #57: Spotify-Branding, Wortmarke, Deko ---------- */
+
+/* #57: Spotify-Branding-Button — flat #1DB954 statt blauem Verlauf,
+   Text und Logo in Spotify-Schwarz #191414 (7.05:1; Weiß auf Grün wäre
+   nur 2.59:1 und fiele durch WCAG AA). Ersetzt die oben entfernte
+   .primary-Regel; die #56-Daumenzone-Regeln hier (position: fixed,
+   Breite, min-height) bleiben unangetastet. display: flex ordnet
+   Logo und Text nebeneinander. */
+#login-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 24px;
+    font-size: 1.05rem;
+    color: #191414;
+    background: #1db954;
+    box-shadow: 0 6px 28px rgba(29, 185, 84, 0.35);
+}
+
+#login-button:hover {
+    background: #1ed760;
+    box-shadow: 0 8px 34px rgba(29, 185, 84, 0.5);
+}
+
+#login-button svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+    flex-shrink: 0;
+}
+
+/* #57: Wortmarke als zentrierter visueller Anker des Login-Screens —
+   das globale Header-h1 ist im Login ausgeblendet (nächste Regel),
+   die Gradient-Optik entspricht dem h1. Fallback ohne :has()-Support
+   (iOS < 15.4): Titel zusätzlich im Header sichtbar. */
+body:has(#login:not([hidden])) header h1 {
+    display: none;
+}
+
+.wordmark {
+    margin: 0;
+    font-size: clamp(2.4rem, 10vw, 3.2rem);
+    letter-spacing: -0.03em;
+    background: linear-gradient(100deg, var(--accent-bright), #fff 65%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* #57: Dezente Equalizer-Deko unter der Wortmarke — ruhige Variante
+   des .eq-Musters (s. Player): größer, langsamer, vier Balken, mit
+   statischer Grundhöhe. Rein dekorativ (aria-hidden); die globale
+   prefers-reduced-motion-Regel am Dateiende stoppt die Animation. */
+.login-eq {
+    display: flex;
+    gap: 5px;
+    height: 28px;
+    align-items: flex-end;
+}
+
+.login-eq span {
+    width: 5px;
+    border-radius: 3px;
+    background: var(--accent-bright);
+    height: 60%;
+    animation: login-eq-bounce 2.4s ease-in-out infinite;
+}
+
+.login-eq span:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.login-eq span:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+.login-eq span:nth-child(4) {
+    animation-delay: 0.9s;
+}
+
+@keyframes login-eq-bounce {
+    0%, 100% { height: 30%; }
+    50% { height: 100%; }
+}
+
 .hero-text {
     margin: 0;
     font-size: 1.1rem;
     max-width: 30ch;
 }
 
-.hint {
+/* #57: Premium-Hinweis als Badge statt grauem Fließtext — Pill mit
+   Rand und Karten-Hintergrund; Text #d9d9d9 ergibt 13.68:1 auf --bg
+   (Akzeptanzkriterium ≥ 4.5:1). */
+.badge {
     margin: 0;
-    color: var(--text-dim);
+    padding: 6px 14px;
+    color: #d9d9d9;
     font-size: 0.9rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+}
+
+.badge a {
+    color: inherit;
 }
 
 /* ---------- Ladezustand (#8) ---------- */
@@ -782,5 +865,11 @@ summary::-webkit-details-marker {
     *::after {
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
+    }
+
+    /* #57: Login-Equalizer steht still statt im 0.01-ms-Takt zu
+       flackern — die Balken zeigen ihre statische Höhe (s.o.). */
+    .login-eq span {
+        animation: none;
     }
 }
