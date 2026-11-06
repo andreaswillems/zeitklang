@@ -374,15 +374,15 @@ function renderPlayerState(state) {
     miniPlayerEl.hidden = sheetOpen || !scannerActive;
 }
 
-// Spoiler-Mechanik: Text der Karte bleibt unscharf, bis details offen ist
+// Spoiler-Mechanik (#66): Der Blur-Zustand folgt dem Mini-Player — open
+// wird nur noch programmatisch gesetzt (openSheet/closeSheet, #61). Der
+// toggle-Event feuert auch dabei und synchronisiert Karte (#13) und
+// Mini-Player-Leiste (#7); ein manueller Toggle existiert nicht mehr.
 spoilerEl.addEventListener("toggle", () => {
     cardEl.classList.toggle("revealed", spoilerEl.open);
     // #7: Mini-Player deckt synchron mit auf/ab — sonst würde die kompakte
     // Leiste den Song nach dem Aufdecken wieder „vergessen".
     miniPlayerEl.classList.toggle("revealed", spoilerEl.open);
-    spoilerEl.querySelector("summary").textContent = spoilerEl.open
-        ? "Titel & Interpret verbergen"
-        : "Titel & Interpret anzeigen";
 });
 
 // §4: Track-ID aus open.spotify.com/track/<id>, spotify:track:<id>

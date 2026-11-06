@@ -131,10 +131,11 @@
                     <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
                 </button>
             </div>
-            <!-- Spoiler: Im Quiz darf die Lösung nicht sofort sichtbar sein. -->
-            <details id="spoiler">
-                <summary class="ghost">Titel &amp; Interpret anzeigen</summary>
-            </details>
+            <!-- #66: Spoiler als reiner State-Holder (hidden) — open wird von
+                 openSheet()/closeSheet() gesetzt (#61), der Blur folgt dem
+                 Mini-Player: maximiert = enthüllt, minimiert = verhüllt.
+                 Kein summary mehr, der manuelle Toggle ist entfallen. -->
+            <details id="spoiler" hidden></details>
         </section>
         <!-- #7: Persistenter Mini-Player — aus jeder Ansicht erreichbar,
              solange ein Track geladen ist; #37: solange das Sheet offen ist,

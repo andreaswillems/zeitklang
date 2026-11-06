@@ -52,8 +52,7 @@ h1 {
 
 /* ---------- Buttons ---------- */
 
-button,
-summary {
+button {
     font: inherit;
     font-weight: 700;
     border: none;
@@ -62,13 +61,11 @@ summary {
     transition: transform 0.15s, box-shadow 0.2s, background 0.2s, color 0.2s;
 }
 
-button:active,
-summary:active {
+button:active {
     transform: scale(0.96);
 }
 
-button:focus-visible,
-summary:focus-visible {
+button:focus-visible {
     outline: 2px solid var(--accent-bright);
     outline-offset: 2px;
 }
@@ -313,7 +310,7 @@ body:has(#login:not([hidden])) header h1 {
     font-size: 0.95rem;
 }
 
-/* Retry-Button: Ghost-Optik (s.o.), etwas kompakter als summary/chevron */
+/* Retry-Button: Ghost-Optik (s.o.), etwas kompakter als Chevron/Logout */
 #login-error .ghost {
     padding: 10px 18px;
     font-size: 0.9rem;
@@ -488,21 +485,11 @@ body:has(#login:not([hidden])) header h1 {
     min-height: 40dvh;
 }
 
-details {
-    margin-top: 16px;
-    text-align: center; /* summary als zentrierter Button */
-}
-
-/* Dreieck-Marker des summary aus (Chrome/Firefox: list-style, Safari: Pseudo) */
-summary {
-    color: var(--text-dim);
-    display: inline-block;
-    list-style: none;
-}
-
-summary::-webkit-details-marker {
-    display: none;
-}
+/* #66: Spoiler-Toggle entfallen — das ehemalige details/summary mit
+   „Titel & Interpret anzeigen“ gibt es nicht mehr; #spoiler ist nur noch
+   State-Holder (hidden, s. index.html), der Blur-Zustand folgt dem
+   Mini-Player (app.js: openSheet/closeSheet, #61). Die summary-Regeln
+   (Button-Gruppe, Dreieck-Marker) sind damit obsolet und entfernt. */
 
 /* #38: Abmelden als runder Icon-Button oben rechts im Header — visuelles
    Text-Label entfällt, der zugängliche Name bleibt (aria-label, s.
