@@ -949,3 +949,88 @@ body:has(#login:not([hidden])) header h1 {
         animation: none;
     }
 }
+
+/* ---------- #70: Onboarding-Kurzanleitung in der Scan-Ansicht ---------- */
+/* Nur bei gestopptem Scanner sichtbar: derselbe Zustand wie die Platzhalter-
+   Fläche aus #47 — #start ist genau dann sichtbar, wenn der Scanner gestoppt
+   ist. Ohne :has()-Support (iOS < 15.4) bleibt die Anleitung ausgeblendet
+   (gleicher dokumentierter Fallback wie die Fläche aus #47). */
+#guide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    pointer-events: none;
+}
+#reader-wrap:has(#start:not([hidden])) #guide {
+    display: flex;
+}
+.guide-card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 18px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+}
+.guide-title {
+    margin: 0;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+}
+.guide-steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+}
+.guide-steps li {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+}
+.step-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+}
+.step-icon svg {
+    width: 24px;
+    height: 24px;
+    fill: var(--accent-bright);
+}
+.step-text strong {
+    display: block;
+    font-size: 0.95rem;
+}
+.step-text small {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    line-height: 1.3;
+}
+/* Chevron-Pfeile zwischen den Einträgen: auf die Icon-Spalte zentriert
+   (Icon-Kreis 48 px, Pfeil-Mitte bei 24 px), rein dekorativ (aria-hidden). */
+.step-arrow {
+    position: absolute;
+    top: calc(100% - 9px);
+    left: 15px;
+    width: 18px;
+    height: 18px;
+    fill: var(--text-dim);
+}
