@@ -147,40 +147,6 @@ section:not([hidden]) {
     font-size: 0.9rem;
 }
 
-/* ---------- Ladezustand (#8) ---------- */
-
-/* Sichtbar ab First Paint (kein hidden in index.html), bis show() die
-   Ziel-Ansicht einblendet. Die globale prefers-reduced-motion-Regel unten
-   stoppt die Rotation passend dazu. */
-#loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    padding: 56px 0;
-    color: var(--text-dim);
-    text-align: center;
-}
-
-#loading p {
-    margin: 0;
-}
-
-.spinner {
-    width: 36px;
-    height: 36px;
-    border: 3px solid var(--border);
-    border-radius: 50%;
-    border-top-color: var(--accent-bright);
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
 /* ---------- Scan (§6.2/§6.3) ---------- */
 
 #counter {
@@ -264,6 +230,11 @@ summary::-webkit-details-marker {
 /* ---------- Now-Playing-Karte ---------- */
 
 #now-playing {
+    /* #13: Anker für Overlay (.np-meta/#toggle) und Scrim (::after);
+       min-height hält die Karte aufrecht, falls mal kein Cover-Bild
+       geladen ist (#cover hidden → kein Flow-Inhalt mehr). */
+    position: relative;
+    min-height: 120px;
     display: flex;
     gap: 14px;
     align-items: center;
@@ -278,18 +249,37 @@ summary::-webkit-details-marker {
 
 #cover {
     width: 92px;
-    height: 92px;
+    /* #13: Höhe folgt via aspect-ratio dem width-Übergang — die Karte wächst
+       dadurch kontinuierlich mit, ohne eigenen height-Übergang. */
+    height: auto;
+    aspect-ratio: 1;
     border-radius: 12px;
     object-fit: cover;
     flex-shrink: 0;
     /* Spoiler-Schutz wie bei Titel/Interpret: Cover verrät sonst das Album */
     filter: blur(7px);
-    transition: filter 0.3s;
+    /* #13: sanftes Wachsen beim Enthüllen (92px → 100% in .revealed);
+       Dauer und Easing synchron zu den Overlay-Übergängen (.np-meta/#toggle). */
+    transition: filter 0.3s, width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+/* #13: Titel/Interpret wandern beim Enthüllen in ein Overlay unten über das
+   Cover. Dauerhaft absolut positioniert; die Ruhelage reproduziert die
+   frühere Flow-Box pixelgenau (left 120 = 14+92+14, right 76 = 14+48+14,
+   top 50% + translateY(-50%) = mittig zur 92px-Cover-Zeile) — dadurch ist
+   der Wechsel selbst ein interpolierbarer Übergang statt eines Sprungs. */
 .np-meta {
-    flex: 1;
-    min-width: 0;
+    position: absolute;
+    left: 120px;
+    right: 76px;
+    top: 50%;
+    transform: translateY(-50%);
+    /* über dem Scrim (z-index 1) */
+    z-index: 2;
+    transition:
+        left 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+        top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* Spoiler-Schutz: Titel/Interpret unscharf, bis <details> aufgedeckt wird */
@@ -319,6 +309,50 @@ summary::-webkit-details-marker {
     filter: none;
 }
 
+/* ---------- #13: Enthüll-Layout des Covers ---------- */
+
+/* Aufgedeckt wächst das Cover weich auf volle Kartenbreite (width-Transition
+   in #cover), Titel/Interpret und Play-Button gleiten dabei in ein Overlay
+   unten über das Cover (Spotify-Style). Alles interpolierbar, kein JS —
+   prefers-reduced-motion greift über die Global-Regel am Dateiende. */
+#now-playing.revealed #cover {
+    width: 100%;
+}
+
+#now-playing.revealed .np-meta {
+    left: 14px;
+    top: calc(100% - 14px);
+    transform: translateY(-100%);
+}
+
+#now-playing.revealed #toggle {
+    /* Unterkante 20px über dem Kartenrand, optisch mittig zur Textzeile */
+    top: calc(100% - 68px);
+}
+
+/* #13: Scrim für Lesbarkeit der Overlay-Texte über dem Cover — immer
+   vorhanden, blendet mit dem Enthüllen ein; pointer-events: none hält
+   die Overlay-Buttons klickbar. backdrop-filter auf #now-playing erzeugt
+   den Stacking-Kontext, die z-Indexe bleiben also in der Karte. */
+#now-playing::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 40%;
+    background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.55));
+    border-radius: 0 0 20px 20px;
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+    z-index: 1;
+}
+
+#now-playing.revealed::after {
+    opacity: 1;
+}
+
 #toggle {
     width: 48px;
     height: 48px;
@@ -331,6 +365,21 @@ summary::-webkit-details-marker {
     border-radius: 50%;
     color: #0a1b33;
     background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+    /* #13: dauerhaft absolut, Ruhelage wie im Flow (rechts bündig, mittig
+       zur 92px-Zeile — Höhe 48px ist fix, deshalb top statt translateY und
+       transform bleibt für die :active-Skalierung frei). */
+    position: absolute;
+    right: 14px;
+    top: calc(50% - 24px);
+    /* über dem Scrim (z-index 1) */
+    z-index: 2;
+    /* Button-Global-Transition (s.o.) um top erweitert — #toggle ersetzt sie */
+    transition:
+        transform 0.15s,
+        box-shadow 0.2s,
+        background 0.2s,
+        color 0.2s,
+        top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* Play/Pause-Icons (#1): Inline-SVG statt ▶/▮▮ — identisch auf allen Plattformen.
