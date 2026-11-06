@@ -215,6 +215,9 @@ summary::-webkit-details-marker {
 
 #logout {
     margin-top: 28px;
+    /* #7: Abstand nach unten, damit die fixe Mini-Player-Leiste den
+       Abmelden-Button nicht überdeckt. */
+    margin-bottom: 76px;
 }
 
 #status {
@@ -297,22 +300,26 @@ summary::-webkit-details-marker {
 }
 
 /* Play/Pause-Icons (#1): Inline-SVG statt ▶/▮▮ — identisch auf allen Plattformen.
-   fill: currentColor erbt die Button-Farbe; #7 (Mini-Player) kann das übernehmen. */
-#toggle svg {
+   fill: currentColor erbt die Button-Farbe; #7 (Mini-Player) nutzt sie mit. */
+#toggle svg,
+#mini-toggle svg {
     width: 22px;
     height: 22px;
     fill: currentColor;
 }
 
-#toggle .icon-pause {
+#toggle .icon-pause,
+#mini-toggle .icon-pause {
     display: none;
 }
 
-#toggle.paused .icon-play {
+#toggle.paused .icon-play,
+#mini-toggle.paused .icon-play {
     display: none;
 }
 
-#toggle.paused .icon-pause {
+#toggle.paused .icon-pause,
+#mini-toggle.paused .icon-pause {
     display: block;
 }
 
@@ -346,6 +353,104 @@ summary::-webkit-details-marker {
 
 #now-playing:not(.playing) .eq span {
     animation-play-state: paused;
+}
+
+/* ---------- Mini-Player (#7) ---------- */
+
+/* Fixe, kompakte Now-Playing-Leiste am unteren Rand — in Login- und
+   Scan-Ansicht sichtbar, solange ein Track geladen ist (#7). */
+#mini-player {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    width: min(398px, calc(100vw - 32px));
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px;
+    background: rgba(18, 18, 22, 0.82);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+}
+
+/* Tap-Fläche: öffnet die Player-Ansicht; kein Pillen-Look, flacher Textbutton */
+#mini-open {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    padding: 6px;
+    background: transparent;
+    color: inherit;
+    font-weight: 400;
+    text-align: left;
+    border-radius: 10px;
+}
+
+#mini-cover {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    /* Spoiler-Schutz wie im Player-View (#16: Blur-Sync gilt auch hier) */
+    filter: blur(5px);
+    transition: filter 0.3s;
+}
+
+.mini-meta {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+}
+
+#mini-title,
+#mini-artist {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    filter: blur(5px);
+    transition: filter 0.3s;
+}
+
+#mini-title {
+    font-weight: 700;
+}
+
+#mini-artist {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+}
+
+/* Aufgedeckt im Player-View → auch die Leiste zeigt den Song offen */
+#mini-player.revealed #mini-cover,
+#mini-player.revealed #mini-title,
+#mini-player.revealed #mini-artist {
+    filter: none;
+}
+
+#mini-toggle {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    color: #0a1b33;
+    background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+}
+
+#mini-toggle svg {
+    width: 18px;
+    height: 18px;
 }
 
 @media (prefers-reduced-motion: reduce) {
