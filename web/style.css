@@ -102,7 +102,7 @@ summary:focus-visible {
     border-color: rgba(255, 255, 255, 0.25);
 }
 
-/* ---------- Ansichten (Login / Scan / Player) ---------- */
+/* ---------- Ansichten (Login / Scan) ---------- */
 
 /* !important: display-Regeln wie #login überlagern sonst das hidden-Attribut */
 [hidden] {
@@ -241,10 +241,6 @@ summary {
 
 summary::-webkit-details-marker {
     display: none;
-}
-
-#next-card {
-    margin-top: 28px;
 }
 
 #logout {
@@ -573,6 +569,81 @@ summary::-webkit-details-marker {
 #mini-toggle svg {
     width: 18px;
     height: 18px;
+}
+
+/* ---------- #37: Player als Bottom-Sheet über dem Scanner ---------- */
+
+/* Abgedunkelter Rest-Bereich über der Scan-Ansicht; Tap schließt das Sheet.
+   Über der Mini-Player-Leiste (z 10), unter dem Sheet (z 20) — bei offenem
+   Sheet ist die Leiste ohnehin versteckt. */
+#sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 15;
+}
+
+#sheet-backdrop.open {
+    opacity: 1;
+}
+
+/* Sheet fährt von unten hoch — transform statt Layout-Sprung (Muster aus
+   #13); Breite wie die Mini-Player-Leiste (#7). */
+#player-sheet {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translate(-50%, 100%);
+    width: min(398px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto; /* kleine Viewports; offen für künftige Rate-Eingabe (#12) */
+    padding: 4px 16px calc(20px + env(safe-area-inset-bottom));
+    background: rgba(18, 18, 22, 0.92);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.5);
+    z-index: 20;
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#player-sheet.open {
+    transform: translate(-50%, 0);
+}
+
+/* Das Sheet fährt per transform — die view-in-Animation für Ansichten
+   (section:not([hidden])) würde sie beim Öffnen kurz überlagern. */
+#player-sheet:not([hidden]) {
+    animation: none;
+}
+
+/* Chevron (Schließen): volle Breite als Tap-Ziel, ohne Ghost-Rahmen */
+#sheet-close {
+    width: 100%;
+    padding: 8px;
+    border-color: transparent;
+    background: transparent;
+}
+
+#sheet-close:hover {
+    color: #fff;
+    border-color: transparent;
+}
+
+#sheet-close svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+}
+
+/* Karte sitzt direkt unter dem Chevron — der Flow-Abstand (16 px als
+   ehemaliges erstes Element der Player-Ansicht) fällt weg. */
+#player-sheet #now-playing {
+    margin-top: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
