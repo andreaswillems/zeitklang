@@ -67,9 +67,17 @@
             <p id="result" role="status"></p>
             <button id="logout" class="ghost">Abmelden</button>
         </section>
-        <!-- Seite 3: Player (§6.3) — Song-Infos hinter Spoiler.
+        <!-- #37: Player als Bottom-Sheet über dem Scanner — kein View-Wechsel
+             mehr. Now-Playing-Karte (inkl. #13-Enthüllung) und Spoiler leben
+             unverändert in diesem Sheet; der Scanner läuft dahinter weiter,
+             ein neuer Scan schließt das Sheet automatisch (app.js).
              id nicht "player" nennen: window.player ist der SDK-Player. -->
-        <section id="player-view" hidden>
+        <div id="sheet-backdrop" hidden></div>
+        <section id="player-sheet" hidden role="dialog" aria-modal="true"
+                 aria-label="Aktueller Song">
+            <button id="sheet-close" class="ghost" aria-label="Player schließen">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17 5 10h14z"/></svg>
+            </button>
             <div id="now-playing">
                 <img id="cover" alt="Album-Cover" width="92" height="92">
                 <div class="np-meta">
@@ -86,13 +94,13 @@
             <details id="spoiler">
                 <summary class="ghost">Titel &amp; Interpret anzeigen</summary>
             </details>
-            <button id="next-card" class="primary">Weitere Karte scannen</button>
         </section>
         <!-- #7: Persistenter Mini-Player — aus jeder Ansicht erreichbar,
-             solange ein Track geladen ist; in der Player-Ansicht ausgeblendet
-             (redundant). Titel/Interpret bleiben hinter dem Spoiler-Blur. -->
+             solange ein Track geladen ist; #37: solange das Sheet offen ist,
+             ist die Leiste redundant. Titel/Interpret bleiben hinter dem
+             Spoiler-Blur. -->
         <div id="mini-player" hidden>
-            <button id="mini-open" aria-label="Aktuellen Song in der Player-Ansicht anzeigen">
+            <button id="mini-open" aria-label="Aktuellen Song im Player anzeigen">
                 <img id="mini-cover" alt="" width="44" height="44">
                 <span class="mini-meta">
                     <span id="mini-title"></span>

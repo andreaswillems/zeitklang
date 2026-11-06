@@ -16,7 +16,13 @@ const KEYS = {
 
 const loginSection = document.getElementById("login");
 const scanSection = document.getElementById("scan");
-const playerSection = document.getElementById("player-view");
+// #37: Player als Bottom-Sheet — kein View-Wechsel mehr, show() kennt keine
+// Player-Sektion. Das Sheet öffnet/schließt sich unabhängig vom Ansichts-
+// Zustand (openSheet/closeSheet unten bei den #7-Handlern).
+const playerSheet = document.getElementById("player-sheet");
+const sheetBackdrop = document.getElementById("sheet-backdrop");
+const sheetCloseBtn = document.getElementById("sheet-close");
+let sheetOpen = false;
 // #8: Ladezustand — in index.html als einziger Bereich ohne hidden direkt
 // sichtbar (schon ab First Paint, ohne JS); show() blendet ihn mit der
 // ersten Ziel-Ansicht wieder aus.
@@ -34,8 +40,8 @@ const scanner = new Html5Qrcode("reader");
 // #3: Torch-Button — bleibt hidden, bis Torch-Support erkannt wurde.
 const torchBtn = document.getElementById("torch");
 // #7: Persistenter Mini-Player — kompakte Now-Playing-Leiste, solange ein
-// Track geladen ist. Tap auf die Infos öffnet die Player-Ansicht, der
-// Play/Pause-Button nutzt dieselbe Icon-Mechanik wie #1 im Player-View.
+// Track geladen ist. Tap auf die Infos öffnet das Player-Sheet (#37), der
+// Play/Pause-Button nutzt dieselbe Icon-Mechanik wie #1 im Player-Sheet.
 const miniPlayerEl = document.getElementById("mini-player");
 const miniOpenEl = document.getElementById("mini-open");
 const miniCoverEl = document.getElementById("mini-cover");
@@ -180,7 +186,8 @@ function logout() {
     window.player?.disconnect();
     window.player = null;
     trackLoaded = false; // #7: Mini-Player verschwindet mit der Session
-    miniPlayerEl.hidden = true;
+    // #37: offenes Sheet endet mit der Session — sofort, ohne Animation.
+    closeSheet(true);
     show(loginSection);
 }
 
@@ -198,7 +205,7 @@ let authErrorTimer = null;
 const QUEUE_WAIT_MSG = "Verbinde mit Spotify — der Titel startet in Kürze.";
 const QUEUE_FAIL_MSG = "Verbindung zu Spotify fehlgeschlagen — bitte Seite neu laden.";
 // #6 Stufe 2: Nach dem Scan bleibt die App in der Scan-Ansicht (kontinuierlicher
-// Loop, die Player-Ansicht öffnet sich nur über den Mini-Player). Der frühere
+// Loop, das Player-Sheet (#37) öffnet sich nur über den Mini-Player). Der frühere
 // Auto-Wechsel (awaitingTrackState) ist entfallen — ein expliziter
 // „Runde fertig“-Moment ist laut Spielrunden-Feedback nicht nötig.
 // #7: Erster State-Event = erster Track geladen → Mini-Player darf erscheinen.
@@ -291,10 +298,10 @@ function renderPlayerState(state) {
         state.paused ? "Wiedergabe fortsetzen" : "Wiedergabe pausieren",
     );
     // #7: Mini-Player spiegelt denselben Zustand (Titel/Interpret bleiben
-    // unscharf — Spoiler-Schutz wie im Player-View, siehe style.css).
-    // Sichtbar ab dem ersten Track; ausgeblendet, solange die Player-Ansicht
-    // selbst zu sehen ist. #16: Der künftige aria-hidden-Sync zum Blur muss
-    // auch diese Texte abdecken; bis dahin gilt derselbe Stand wie im View.
+    // unscharf — Spoiler-Schutz wie im Player-Sheet, siehe style.css).
+    // Sichtbar ab dem ersten Track; ausgeblendet, solange das Player-Sheet
+    // (#37) offen ist. #16: Der künftige aria-hidden-Sync zum Blur muss
+    // auch diese Texte abdecken; bis dahin gilt derselbe Stand wie im Sheet.
     miniCoverEl.hidden = !img;
     if (img) miniCoverEl.src = img.url;
     miniTitleEl.textContent = track.name;
@@ -307,7 +314,8 @@ function renderPlayerState(state) {
         state.paused ? "Wiedergabe fortsetzen" : "Wiedergabe pausieren",
     );
     trackLoaded = true;
-    miniPlayerEl.hidden = !playerSection.hidden;
+    // #37: Leiste ist redundant, solange das Sheet offen ist.
+    miniPlayerEl.hidden = sheetOpen;
 }
 
 // Spoiler-Mechanik: Text der Karte bleibt unscharf, bis details offen ist
@@ -424,6 +432,9 @@ function playScannedText(text) {
         String(Number(localStorage.getItem(COUNT_KEY) ?? 0) + 1),
     );
     renderCount();
+    // #37: neuer Scan schiebt ein offenes Sheet zu — der Quiz-Flow bleibt
+    // flüssig, der Spoiler-Reset in playTrack greift wie heute.
+    closeSheet();
     playTrack(trackId);
 }
 
@@ -432,13 +443,12 @@ function playScannedText(text) {
 function show(section) {
     loginSection.hidden = section !== loginSection;
     scanSection.hidden = section !== scanSection;
-    playerSection.hidden = section !== playerSection;
     // #8: Mit jeder Ziel-Ansicht endet der Ladezustand — egal ob nach
     // Token-Austausch, Token-Refresh oder Fehlerfall (Login + Meldung).
     loadingSection.hidden = true;
-    // #7: Mini-Player in Login- und Scan-Ansicht erreichbar, solange ein
-    // Track geladen ist; in der Player-Ansicht wäre er redundant.
-    miniPlayerEl.hidden = !trackLoaded || section === playerSection;
+    // #7/#37: Mini-Player in Login- und Scan-Ansicht erreichbar, solange
+    // ein Track geladen ist; versteckt, solange das Sheet offen ist.
+    miniPlayerEl.hidden = !trackLoaded || sheetOpen;
 }
 
 async function init() {
@@ -460,25 +470,57 @@ async function init() {
 
 document.getElementById("login-button").addEventListener("click", login);
 document.getElementById("logout").addEventListener("click", logout);
-document
-    .getElementById("next-card")
-    .addEventListener("click", () => {
-        window.player?.pause(); // Karte ist durch → Wiedergabe aus
-        resultEl.textContent = ""; // altes Scan-Ergebnis zurücksetzen
-        show(scanSection);
-        window.player?.activateElement(); // iOS: Wiedergabe braucht einen User-Tap (§5.5)
-        // #6 Stufe 2: Der Scanner läuft kontinuierlich — nur neu starten,
-        // wenn er nicht aktiv ist (z. B. nach Kamera-Fehler oder Logout).
-        if (!scannerActive) {
-            startScan().catch((err) => {
-                resultEl.textContent = "Kamera nicht verfügbar: " + err;
-            });
-        }
-    });
+// #37: „Weitere Karte scannen" ist entfallen — der Scanner läuft kontinuierlich
+// (#6 Stufe 2), ein neuer Scan schließt das offene Sheet automatisch. Die
+// frühere Pause-Aktion des Buttons entfällt damit: Der nächste Scan ersetzt
+// die Wiedergabe ohnehin sofort (#14-Kontext, Andreas 6. November 2026).
 playPauseEl.addEventListener("click", () => window.player?.togglePlay());
-// #7: Mini-Player — Tap auf die Infos öffnet die Player-Ansicht, der
+
+// ---------- #37: Player als Bottom-Sheet über dem Scanner ----------
+
+// Öffnen: hidden wegnehmen, im nächsten Frame die Fahrt anstoßen — eine
+// Transition direkt nach dem hidden-Wechsel wirkt noch nicht (display:none
+// bis zum Reflow). transform/opacity statt Layout-Sprung (Muster aus #13);
+// prefers-reduced-motion greift über die Global-Regel in style.css.
+function openSheet() {
+    if (sheetOpen || !trackLoaded) return;
+    sheetOpen = true;
+    miniPlayerEl.hidden = true; // Leiste wäre redundant zum Sheet
+    playerSheet.hidden = false;
+    sheetBackdrop.hidden = false;
+    requestAnimationFrame(() => {
+        playerSheet.classList.add("open");
+        sheetBackdrop.classList.add("open");
+    });
+}
+
+// Schließen: erst die Klasse weg (animiertes Runterfahren), hidden erst
+// danach — sonst springt das Sheet. instant überspringt die Animation
+// (Logout); der Timer hält hidden synchron, auch wenn die Transition
+// durch prefers-reduced-motion ~0 ms dauert.
+function closeSheet(instant = false) {
+    if (!sheetOpen) return;
+    sheetOpen = false;
+    miniPlayerEl.hidden = !trackLoaded; // #7: Leiste kommt zurück
+    playerSheet.classList.remove("open");
+    sheetBackdrop.classList.remove("open");
+    if (instant) {
+        playerSheet.hidden = true;
+        sheetBackdrop.hidden = true;
+        return;
+    }
+    setTimeout(() => {
+        if (sheetOpen) return; // inzwischen wieder geöffnet
+        playerSheet.hidden = true;
+        sheetBackdrop.hidden = true;
+    }, 400); // ≈ Sheet-Transition (350 ms) + Puffer
+}
+
+// #7: Mini-Player — Tap auf die Infos öffnet das Player-Sheet (#37), der
 // Play/Pause-Button steuert die Wiedergabe direkt.
-miniOpenEl.addEventListener("click", () => show(playerSection));
+miniOpenEl.addEventListener("click", openSheet);
+sheetCloseBtn.addEventListener("click", () => closeSheet());
+sheetBackdrop.addEventListener("click", () => closeSheet());
 miniToggleEl.addEventListener("click", () => window.player?.togglePlay());
 init();
 
