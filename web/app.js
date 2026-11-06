@@ -154,6 +154,8 @@ async function getValidToken() {
 
 function logout() {
     clearTimeout(authErrorTimer);
+    clearTimeout(queueTimer); // #9: wartenden Scan nicht in die neue Session rutschen lassen
+    queuedTrackId = null;
     sessionStorage.removeItem(KEYS.access);
     sessionStorage.removeItem(KEYS.expiresAt);
     // Refresh-Token bleibt: Spotify stellt ihn nur bei neuer Zustimmung aus —
@@ -175,12 +177,21 @@ let accessToken = null;
 // auch spurisch beim Connect („Invalid token scopes."), obwohl ready folgt.
 const AUTH_ERROR_MSG = "Authentifizierung fehlgeschlagen — bitte neu anmelden.";
 let authErrorTimer = null;
+// #9: Statuszeilen der Track-Queue (Scan vor SDK-ready). Die Konstanten
+// erlauben es, die eigene Wartemeldung gezielt wieder zu ersetzen, ohne
+// eine spezifischere SDK-Fehlermeldung (z. B. AUTH_ERROR_MSG) zu übergehen.
+const QUEUE_WAIT_MSG = "Verbinde mit Spotify — der Titel startet in Kürze.";
+const QUEUE_FAIL_MSG = "Verbindung zu Spotify fehlgeschlagen — bitte Seite neu laden.";
 // Play-Command angenommen → der NÄCHSTE State-Event gehört zum neuen Track und
 // zeigt die Player-Ansicht. Pause-Events (z. B. „Weitere Karte scannen")
 // springen sonst asynchron zurück und erfordern einen zweiten Klick.
 let awaitingTrackState = false;
 // #7: Erster State-Event = erster Track geladen → Mini-Player darf erscheinen.
 let trackLoaded = false;
+// #9: Track-Queue — ein Scan, bevor das SDK ready ist, bricht nicht mehr ab,
+// sondern wird zwischengespeichert und im ready-Event automatisch abgespielt.
+let queuedTrackId = null;
+let queueTimer = null;
 
 // Muss global sein, bevor das SDK-Script lädt (Script-Tag steht nach app.js).
 window.onSpotifyWebPlaybackSDKReady = () => {
@@ -197,8 +208,21 @@ function createPlayer() {
     });
     window.player.addListener("ready", ({ device_id }) => {
         clearTimeout(authErrorTimer);
-        if (statusEl.textContent === AUTH_ERROR_MSG) statusEl.textContent = "";
+        if (
+            statusEl.textContent === AUTH_ERROR_MSG ||
+            statusEl.textContent === QUEUE_FAIL_MSG
+        ) {
+            statusEl.textContent = "";
+        }
         window.deviceId = device_id;
+        // #9: Wartenden Scan nachziehen — der erste Scan nach dem Login darf
+        // keine Sackgasse sein, auch wenn er vor SDK-ready passiert ist.
+        if (queuedTrackId) {
+            const trackId = queuedTrackId;
+            queuedTrackId = null;
+            clearTimeout(queueTimer);
+            playTrack(trackId);
+        }
     });
     window.player.addListener("player_state_changed", renderPlayerState);
     window.player.addListener("initialization_error", ({ message }) => {
@@ -295,7 +319,22 @@ function trackIdFrom(text) {
 
 async function playTrack(trackId) {
     if (!window.deviceId) {
-        statusEl.textContent = "Player noch nicht verbunden — kurz warten, dann erneut.";
+        // #9: Player verbindet noch → Track-ID zwischenspeichern; das ready-
+        // Event spielt sie automatisch ab. Bricht erst mit klarer Meldung ab,
+        // wenn auch 10 s nach dem Scan keine Verbindung zustande kam.
+        queuedTrackId = trackId;
+        statusEl.textContent = QUEUE_WAIT_MSG;
+        clearTimeout(queueTimer);
+        queueTimer = setTimeout(() => {
+            if (!window.deviceId && queuedTrackId === trackId) {
+                queuedTrackId = null;
+                // Nur ersetzen, wenn nicht inzwischen eine spezifischere
+                // SDK-Meldung (z. B. Auth-Fehler) steht — Queue ist trotzdem weg.
+                if (statusEl.textContent === QUEUE_WAIT_MSG) {
+                    statusEl.textContent = QUEUE_FAIL_MSG;
+                }
+            }
+        }, 10000);
         return;
     }
     spoilerEl.open = false; // neuer Track → Lösung wieder verdecken
