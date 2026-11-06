@@ -247,19 +247,25 @@ section:not([hidden]) {
 }
 
 /* #47: Großer, runder Play-Button anstelle des Text-Buttons — sitzt
-   horizontal UND vertikal zentriert über dem Kamerabereich. Solange die
-   Kamera aus ist, gibt die :has()-Regel darunter eine Platzhalter-Höhe;
-   Zentrierung per inset + margin: auto (kein transform — das bleibt für
-   die globale :active-Skalierung frei, Muster #13/#toggle). Primär-Optik
-   (blauer Verlauf) mit weißem Play-Icon (#1-Pfad); border: none hebt die
-   Overlay-Optik von #reader-wrap button auf. [hidden] (s.o., !important)
-   blendet ihn aus, solange der Scanner läuft. */
-#start {
+   horizontal UND vertikal zentriert über dem Kamerabereich. Auf Andreas'
+   Feedback (6. November 2026, Screenshot IMG_2156) füllt er 3/4 der
+   Viewport-Breite aus (75 vw, bewusst unbegrenzt), das Play-Icon skaliert
+   proportional mit. Wichtig: Selektor #reader-wrap #start (2 IDs) statt
+   nur #start — sonst gewinnt die Overlay-Regel #reader-wrap button (#45,
+   ID + Element) bei width/height/top/background/border und stutzt den
+   Button auf 44 px dunkel zurück (genau der Screenshot-Fehler). Solange
+   die Kamera aus ist, gibt die :has()-Regel darunter eine Platzhalter-
+   Höhe, die den Button sicher umschließt; Zentrierung per inset + margin:
+   auto (kein transform — das bleibt für die globale :active-Skalierung
+   frei, Muster #13/#toggle). Primär-Optik (blauer Verlauf) mit weißem
+   Play-Icon (#1-Pfad); border: none hebt die Overlay-Optik auf. [hidden]
+   (s.o., !important) blendet ihn aus, solange der Scanner läuft. */
+#reader-wrap #start {
     position: absolute;
     inset: 0;
     margin: auto;
-    width: 72px;
-    height: 72px;
+    width: 75vw;
+    height: 75vw;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -272,19 +278,22 @@ section:not([hidden]) {
 }
 
 /* Zwei ID-Selektoren, um gegen #reader-wrap button svg (s.u. in #45) zu
-   gewinnen. */
+   gewinnen. Das Icon skaliert proportional mit dem Button (45 % des
+   Durchmessers) statt in fixer Pixelgröße. */
 #reader-wrap #start svg {
-    width: 32px;
-    height: 32px;
+    width: 45%;
+    height: 45%;
     fill: currentColor;
 }
 
 /* #47: Platzhalter-Fläche nur, solange der Play-Button sichtbar ist
    (Kamera aus) — mit laufendem Video bestimmt dessen Seitenverhältnis
-   die Höhe. Browser ohne :has()-Support (iOS < 15.4) ignorieren die
-   Fläche; der Button bleibt sichtbar, rutscht nur an deren oberen Rand. */
+   die Höhe. max(40dvh, 75vw + 64px) umschließt den 75-vw-Button auch in
+   breiten/niedrigen Viewports sicher. Browser ohne :has()-Support
+   (iOS < 15.4) ignorieren die Fläche; der Button bleibt sichtbar,
+   rutscht nur an deren oberen Rand. */
 #reader-wrap:has(#start:not([hidden])) {
-    min-height: 40dvh;
+    min-height: max(40dvh, calc(75vw + 64px));
 }
 
 details {
