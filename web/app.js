@@ -35,7 +35,6 @@ const cardEl = document.getElementById("now-playing");
 const coverEl = document.getElementById("cover");
 const titleEl = document.getElementById("np-title");
 const artistEl = document.getElementById("np-artist");
-const counterEl = document.getElementById("counter");
 const scanner = new Html5Qrcode("reader");
 // #3: Torch-Button — bleibt hidden, bis Torch-Support erkannt wurde.
 const torchBtn = document.getElementById("torch");
@@ -217,10 +216,9 @@ let queueTimer = null;
 // #6 Stufe 2: kontinuierlicher Scanner — die Kamera bleibt zwischen den Karten
 // an; scannerActive verhindert Doppel-Starts (html5-qrcode wirft sonst).
 let scannerActive = false;
-// #6 Stufe 2 / #11: Dubletten-Guard — im kontinuierlichen Modus feuert der
+// #6 Stufe 2: Dubletten-Guard — im kontinuierlichen Modus feuert der
 // Decoder für dieselbe Karte jeden Frame. Gleicher Track innerhalb des
-// Zeitfensters wird ignoriert: kein Vibrieren, kein Neuzählen, kein Re-Play.
-// #11: Andockstelle für die Unique-Zählung (Track-ID-Set, Repeat-Semantik).
+// Zeitfensters wird ignoriert: kein Vibrieren, kein Re-Play.
 let lastScanTrackId = null;
 let lastScanAt = 0;
 let lastInvalidScan = null;
@@ -329,15 +327,6 @@ spoilerEl.addEventListener("toggle", () => {
         : "Titel & Interpret anzeigen";
 });
 
-// ---------- Zähler (kleines Spielgefühl, persistiert wie §8 die Tokens) ----------
-
-const COUNT_KEY = "zeitklang_count";
-
-function renderCount() {
-    const n = Number(localStorage.getItem(COUNT_KEY) ?? 0);
-    counterEl.textContent = n ? `🎵 ${n} Songs gehört` : "";
-}
-
 // §4: Track-ID aus open.spotify.com/track/<id>, spotify:track:<id>
 // oder der künftigen Route /play/<id> extrahieren.
 function trackIdFrom(text) {
@@ -424,14 +413,9 @@ function playScannedText(text) {
     // #4: haptisches Feedback nach erfolgreichem Scan — bei Party-Lärm oder
     // hektischem Kartengeben sonst leicht zu übersehen. Progressive
     // Enhancement: navigator.vibrate fehlt z. B. in iOS Safari komplett —
-    // optional chaining, kein Fehler. #11: Der Dubletten-Guard dockt darüber
-    // an, ignorierte Frames vibrieren nicht. Unique-Zählung folgt in #11.
+    // optional chaining, kein Fehler. Der Dubletten-Guard verhindert, dass
+    // ignorierte Frames vibrieren.
     navigator.vibrate?.(80);
-    localStorage.setItem(
-        COUNT_KEY,
-        String(Number(localStorage.getItem(COUNT_KEY) ?? 0) + 1),
-    );
-    renderCount();
     // #37: neuer Scan schiebt ein offenes Sheet zu — der Quiz-Flow bleibt
     // flüssig, der Spoiler-Reset in playTrack greift wie heute.
     closeSheet();
@@ -458,7 +442,6 @@ async function init() {
         if (accessToken) {
             createPlayer();
             show(scanSection);
-            renderCount();
         } else {
             show(loginSection);
         }
