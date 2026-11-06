@@ -60,9 +60,10 @@
         </section>
         <!-- Seite 2: Scan (§6.2) -->
         <section id="scan" hidden>
-            <!-- #45: Kamerabild + Overlay-Buttons in einem Anker-Wrapper —
-                 Torch oben links (#3), Scan-Stopp oben rechts; app.js zeigt
-                 beide nur, solange der Scanner aktiv ist. -->
+            <!-- #45/#47: Kamerabild + Overlay-Buttons in einem Anker-Wrapper —
+                 Torch oben links (#3), Scan-Stopp oben rechts (#45). Solange
+                 der Scanner gestoppt ist, füllt eine Platzhalter-Fläche den
+                 Bereich und der runde Play-Button (#47) sitzt mittig darüber. -->
             <div id="reader-wrap">
                 <div id="reader"></div>
                 <!-- #3: Taschenlampe für dunkle Umgebung; hidden bis der
@@ -70,16 +71,19 @@
                 <button id="torch" hidden aria-pressed="false" aria-label="Taschenlampe">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8v4l-2.5 3v11a1.5 1.5 0 0 1-3 0V9L8 6V2z"/></svg>
                 </button>
-                <!-- #45: Scanner manuell stoppen — Kamera aus, „Scan starten“
+                <!-- #45: Scanner manuell stoppen — Kamera aus, Play-Button
                      kehrt zurück; Muster wie Torch (#3). -->
                 <button id="scan-stop" hidden aria-label="Scan stoppen">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                 </button>
+                <!-- #47: Großer runder Play-Button anstelle des Text-Buttons,
+                     horizontal/vertikal über der Fläche zentriert (style.css);
+                     ausgeblendet, solange der Scanner läuft (app.js). -->
+                <button id="start" aria-label="Scan starten">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                </button>
             </div>
             <p id="result" role="status"></p>
-            <!-- #45: „Scan starten“ in der Daumenzone — fix am unteren Rand
-                 (style.css), ausgeblendet, solange der Scanner läuft. -->
-            <button id="start" class="primary">Scan starten</button>
         </section>
         <!-- #37: Player als Bottom-Sheet über dem Scanner — kein View-Wechsel
              mehr. Now-Playing-Karte (inkl. #13-Enthüllung) und Spoiler leben

@@ -246,21 +246,45 @@ section:not([hidden]) {
     border-color: var(--accent-bright);
 }
 
-/* #45: „Scan starten“ in der Daumenzone — fix am unteren Rand, zentriert
-   auf Leisten-/Sheet-Breite (#7-Muster). bottom hebt ihn über die Mini-
-   Player-Leiste (beide z 10, Abstand statt Overlap); Backdrop (15) und
-   Sheet (20) liegen darüber — ein offenes Sheet verdeckt den Button.
-   Zentrierung per left/right + margin statt transform: transform bleibt
-   für die globale :active-Skalierung frei (Muster #13/#toggle). */
+/* #47: Großer, runder Play-Button anstelle des Text-Buttons — sitzt
+   horizontal UND vertikal zentriert über dem Kamerabereich. Solange die
+   Kamera aus ist, gibt die :has()-Regel darunter eine Platzhalter-Höhe;
+   Zentrierung per inset + margin: auto (kein transform — das bleibt für
+   die globale :active-Skalierung frei, Muster #13/#toggle). Primär-Optik
+   (blauer Verlauf) mit weißem Play-Icon (#1-Pfad); border: none hebt die
+   Overlay-Optik von #reader-wrap button auf. [hidden] (s.o., !important)
+   blendet ihn aus, solange der Scanner läuft. */
 #start {
-    position: fixed;
-    left: 0;
-    right: 0;
-    margin: 0 auto;
-    bottom: calc(88px + env(safe-area-inset-bottom));
-    width: min(398px, calc(100vw - 32px));
-    z-index: 10;
-    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+    box-shadow: 0 10px 34px rgba(59, 130, 246, 0.45);
+}
+
+/* Zwei ID-Selektoren, um gegen #reader-wrap button svg (s.u. in #45) zu
+   gewinnen. */
+#reader-wrap #start svg {
+    width: 32px;
+    height: 32px;
+    fill: currentColor;
+}
+
+/* #47: Platzhalter-Fläche nur, solange der Play-Button sichtbar ist
+   (Kamera aus) — mit laufendem Video bestimmt dessen Seitenverhältnis
+   die Höhe. Browser ohne :has()-Support (iOS < 15.4) ignorieren die
+   Fläche; der Button bleibt sichtbar, rutscht nur an deren oberen Rand. */
+#reader-wrap:has(#start:not([hidden])) {
+    min-height: 40dvh;
 }
 
 details {
@@ -312,11 +336,13 @@ summary::-webkit-details-marker {
     fill: currentColor;
 }
 
-/* #7/#38/#45: Der untere Freiraum schützt die Scan-Inhalte davor, von den
-   fixen unteren Elementen überdeckt zu werden — Mini-Player-Leiste (≈ 74 px
-   über dem Rand) und „Scan starten“-Button (Unterkante ≈ 150 px). */
+/* #7/#38/#45/#47: Der untere Freiraum schützt die Scan-Inhalte davor, von
+   der fixen Mini-Player-Leiste überdeckt zu werden (≈ 74 px über dem Rand).
+   Der Start-Button liegt mit #47 wieder im Flow (zentriert über der
+   Kamerafläche), die Leiste ist zudem nur bei laufendem Scanner sichtbar —
+   76 px genügen wieder. */
 #scan {
-    padding-bottom: 190px;
+    padding-bottom: 76px;
 }
 
 #status {

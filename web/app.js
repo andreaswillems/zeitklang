@@ -314,7 +314,9 @@ function renderPlayerState(state) {
     );
     trackLoaded = true;
     // #37: Leiste ist redundant, solange das Sheet offen ist.
-    miniPlayerEl.hidden = sheetOpen;
+    // #47: und unsichtbar, solange der Scanner gestoppt ist — der runde
+    // Play-Button gehört dann allein zur Scan-Ansicht.
+    miniPlayerEl.hidden = sheetOpen || !scannerActive;
 }
 
 // Spoiler-Mechanik: Text der Karte bleibt unscharf, bis details offen ist
@@ -435,7 +437,8 @@ function show(section) {
     loadingSection.hidden = true;
     // #7/#37: Mini-Player in Login- und Scan-Ansicht erreichbar, solange
     // ein Track geladen ist; versteckt, solange das Sheet offen ist.
-    miniPlayerEl.hidden = !trackLoaded || sheetOpen;
+    // #47: auch versteckt, solange der Scanner gestoppt ist.
+    miniPlayerEl.hidden = !trackLoaded || sheetOpen || !scannerActive;
 }
 
 async function init() {
@@ -487,7 +490,8 @@ function openSheet() {
 function closeSheet(instant = false) {
     if (!sheetOpen) return;
     sheetOpen = false;
-    miniPlayerEl.hidden = !trackLoaded; // #7: Leiste kommt zurück
+    // #7: Leiste kommt zurück — #47: nur, wenn der Scanner läuft.
+    miniPlayerEl.hidden = !trackLoaded || !scannerActive;
     playerSheet.classList.remove("open");
     sheetBackdrop.classList.remove("open");
     if (instant) {
@@ -556,6 +560,9 @@ async function startScan() {
     // scanner.start() fehl, bleibt der Button sichtbar (kein Reset nötig).
     startBtn.hidden = true;
     stopScanBtn.hidden = false;
+    // #47: Scan-Neustart gibt die Leiste zurück, wenn bereits ein Track
+    // läuft (nach Stopp war sie ausgeblendet).
+    miniPlayerEl.hidden = !trackLoaded || sheetOpen;
     // #3: Torch-Support erst nach erfolgreichem Start prüfen — Button nur
     // zeigen, wenn das Gerät die Kamera-LED wirklich steuern kann.
     try {
@@ -583,7 +590,11 @@ function stopScan() {
     }
     stopScanBtn.hidden = true;
     torchBtn.hidden = true;
-    startBtn.hidden = false; // #45: „Scan starten“ kehrt in die Daumenzone zurück
+    startBtn.hidden = false; // #45/#47: Play-Button kehrt auf die Kamerafläche zurück
+    // #47: Leiste ausblenden — der gestoppte Scanner rückt den runden
+    // Play-Button in den Fokus; sie kehrt mit dem Scan-Neustart bzw.
+    // dem nächsten Track zurück.
+    miniPlayerEl.hidden = true;
 }
 
 startBtn.addEventListener("click", () => {
