@@ -38,6 +38,15 @@
         <p class="tagline">Scannen · Hören · Einordnen</p>
     </header>
     <main>
+        <!-- #8: Ladezustand — als einziger Bereich ohne hidden direkt
+             sichtbar, sobald die Seite malt; show() in app.js blendet ihn
+             aus, sobald die Ziel-Ansicht feststeht. Verhindert den leeren
+             Screen, während nach dem OAuth-Redirect der Token-Austausch
+             (oder -Refresh) läuft. -->
+        <section id="loading" role="status">
+            <div class="spinner" aria-hidden="true"></div>
+            <p>Anmeldung läuft…</p>
+        </section>
         <!-- Zustände §6: nicht angemeldet → Login; angemeldet → Scan -->
         <section id="login" hidden>
             <p class="hero-text">Melde dich an, scanne eine Karte und das Lied spielt auf deinem Handy.</p>
