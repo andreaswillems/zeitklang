@@ -635,11 +635,10 @@ sheetCloseBtn.addEventListener("click", () => closeSheet());
 sheetBackdrop.addEventListener("click", () => closeSheet());
 miniToggleEl.addEventListener("click", () => window.player?.togglePlay());
 
-// ---------- #18: Installation (Android beforeinstallprompt, iOS-Hinweis) ----------
+// ---------- #18: Installation (Android/Desktop-Chrome: beforeinstallprompt) ----------
 
 const installLoginBtn = document.getElementById("install-login");
 const installScanBtn = document.getElementById("install-scan");
-const iosHintEl = document.getElementById("ios-hint");
 
 // Android/Desktop-Chrome: Der Browser feuert beforeinstallprompt, sobald die
 // PWA installierbar ist (Manifest + Service Worker aus #17). preventDefault()
@@ -677,27 +676,6 @@ installScanBtn.addEventListener("click", () => promptInstall());
 window.addEventListener("appinstalled", () => {
     deferredInstallPrompt = null;
     showInstallButtons(false);
-});
-
-// iOS kennt kein beforeinstallprompt — der Weg läuft über das Safari-Menü
-// („Teilen“ → „Zum Home-Bildschirm hinzufügen“). Der Banner erscheint genau
-// einmal pro Gerät (Akzeptenzkriterium): Das Flag wird beim ersten Anzeigen
-// gesetzt und nie zurückgesetzt, auch Wegklicken ist nur Kosmetik. Bereits
-// installiert (Standalone) → kein Hinweis. iPadOS tarnt sich als macOS,
-// deshalb der maxTouchPoints-Check.
-const isIOS =
-    /iphone|ipad|ipod/i.test(navigator.userAgent) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-if (
-    isIOS &&
-    !window.navigator.standalone &&
-    !localStorage.getItem("zeitklang_install_hint")
-) {
-    localStorage.setItem("zeitklang_install_hint", "1");
-    iosHintEl.hidden = false;
-}
-document.getElementById("ios-hint-close").addEventListener("click", () => {
-    iosHintEl.hidden = true; // Flag steht schon — der Hinweis kommt nie wieder
 });
 init();
 
@@ -757,9 +735,6 @@ async function startScan() {
     // #47: Scan-Neustart gibt die Leiste zurück, wenn bereits ein Track
     // läuft (nach Stopp war sie ausgeblendet).
     miniPlayerEl.hidden = !trackLoaded || sheetOpen;
-    // #18: iOS-Banner weicht der aktiven Kamera aus (liegt sonst über den
-    // Torch-/Stopp-Overlays, #45) — er kommt nicht wieder (Flag-Kriterium).
-    if (!iosHintEl.hidden) iosHintEl.hidden = true;
     // #3: Torch-Support erst nach erfolgreichem Start prüfen — Button nur
     // zeigen, wenn das Gerät die Kamera-LED wirklich steuern kann.
     try {
