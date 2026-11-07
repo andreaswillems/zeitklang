@@ -21,11 +21,11 @@
 
 ## Project concept (from README.md)
 
-A music quiz game:
+A scanner-player app:
 
-- Players scan QR codes on physical cards with a **mobile scanner app**; each QR code links to a song which then plays.
-- Players must place scanned songs in correct chronological order; first to 10 correctly placed cards wins.
-- Variants: guessing artist and/or song title.
+- Users scan QR codes on physical cards with a **mobile scanner app**; each QR code links to a song which then plays on their phone.
+- Title and artist stay hidden behind a spoiler blur until deliberately revealed.
+- No quiz features or other game elements are planned for now.
 
 ## Tech stack
 
