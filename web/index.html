@@ -4,6 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- #78: Meta-CSP + Referrer-Policy — GitHub Pages setzt keine Security-Header,
+         Meta-Tags am Head-Anfang sind die einzige Absicherung (Details: Issue #78). -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://sdk.scdn.co; style-src 'self'; img-src 'self' https://*.scdn.co data:; connect-src 'self' https://accounts.spotify.com https://api.spotify.com https://*.spotify.com wss://*.spotify.com; media-src blob: https://*.spotify.com; worker-src blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+    <meta name="referrer" content="no-referrer">
     <meta name="theme-color" content="#0e0e0e">
     <title>Zeitklang</title>
     <!-- #5: Meta-Beschreibung + Open-Graph/Twitter-Tags für Link-Previews -->
