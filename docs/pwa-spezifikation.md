@@ -131,6 +131,13 @@ SDK streamt ohne Premium nicht.
 - `shortcut:` Refresh Token in `localStorage` — Ceiling: bei XSS auslesbar; Nutzung nur
   privat auf dem eigenen Gerät. Upgrade: Token-Tausch serverseitig (Client Secret bleibt
   im Backend, z. B. `zeitklang serve` als Proxy).
+  **Entscheidung (7. November 2026, Issue #81, Option a):** Restrisiko formal akzeptiert.
+  Mitigation: Meta-CSP live (#78; `script-src 'self' https://sdk.scdn.co`, keine Inline-Scripts,
+  kein 'unsafe-eval'), alle dynamischen Texte in `app.js` über `textContent` (keine
+  XSS-Sinks im App-Code), Nutzung rein privat auf dem eigenen Gerät (Risiko-Owner:
+  Andreas). Alternativen (b) sessionStorage (Auto-Login nur pro Session) und
+  (c) Re-Login-Kadenz bewusst abgelehnt — UX-Einbuße bzw. Aufwand ohne nennenswerten
+  Gewinn.
 - `shortcut:` QR-Codes bleiben `open.spotify.com/track/…` — Ceiling: Scannen öffnet
   nicht direkt die PWA. Upgrade: `cards.py` druckt künftig `…/play/<id>` (Route der PWA).
 - `shortcut:` Service Worker cacht nur die Shell, keine Audiodaten — Ceiling: Wiedergabe
