@@ -205,18 +205,6 @@
             </button>
         </div>
         <p id="status" role="alert"></p>
-
-        <!-- #18: Einmaliger Install-Hinweis für iOS (kein beforeinstallprompt
-             dort): schwebender Banner oben mit dem Weg über das Safari-Menü.
-             app.js zeigt ihn genau einmal pro Gerät (localStorage-Flag wird
-             beim ersten Anzeigen gesetzt) und blendet ihn bei Scanner-Start
-             aus (Platz für Torch/Stopp-Overlays, #45). -->
-        <div id="ios-hint" hidden role="status">
-            <p>Zeitklang als App installieren: In Safari auf <strong>Teilen</strong> tippen und <strong>Zum Home-Bildschirm hinzufügen</strong> wählen.</p>
-            <button id="ios-hint-close" class="ghost" aria-label="Hinweis schließen">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </button>
-        </div>
     </main>
     <script src="config.js"></script>
     <script src="vendor/html5-qrcode.min.js"></script>
