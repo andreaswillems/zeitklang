@@ -97,7 +97,7 @@ Flow und darf nicht an den Browser weitergereicht werden.
    (`player.togglePlay()`). Nur der erste State nach einem angenommenen
    Play-Command wechselt zur Player-Ansicht — Pause-Events („Weitere Karte
    scannen") springen nicht zurück. Titel/Künstler liegen hinter einem Spoiler
-   (`<details>`): Im Quiz darf die Lösung nicht sofort sichtbar sein — Tippen
+   (`<details>`): Titel und Interpret dürfen nicht sofort sichtbar sein — Tippen
    deckt auf, ein neuer Play macht den Spoiler wieder zu.
 5. iOS/mobile: beim Scan-Tap `player.activateElement()` aufrufen; nach dem Transfer
    startet die Wiedergabe auf iOS ggf. pausiert → Nutzer tippt Play (§8).
