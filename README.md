@@ -1,10 +1,8 @@
-# Zeitklang — Musik-Quiz
+# Zeitklang — Scanner-Player
 
-Dieses Repo enthält den Code für „Zeitklang", ein Musik-Quiz-Spiel mit QR-Karten.
+Dieses Repo enthält den Code für „Zeitklang", einen Scanner-Player mit QR-Karten.
 
-Die Grundidee: Spieler scannen QR-Codes auf physischen Kärtchen mit einer mobilen Scanner-App. Jeder QR-Code ist mit einem Musikstück (Spotify) verknüpft. Ziel des Spiels ist es, die gescannten Songs chronologisch nach Veröffentlichungsjahr zu ordnen. Wer als erster 10 Kärtchen korrekt platziert hat, gewinnt.
-
-Varianten: Künstler und/oder Songtitel erraten.
+Die Grundidee: QR-Codes auf physischen Kärtchen mit einer mobilen Scanner-App scannen; jeder QR-Code ist mit einem Musikstück (Spotify) verknüpft, das direkt auf dem Handy abspielt. Titel und Interpret bleiben in der App hinter einem Spoiler verborgen, bis sie bewusst enthüllt werden. Eine Quiz-Funktion oder andere Spiele-Elemente sind vorerst nicht geplant.
 
 ## Projektstruktur
 
@@ -34,7 +32,7 @@ uv run ruff check                    # Lint
 
 ## Die Kärtchen
 
-Die Kärtchen werden als PDF generiert (`zeitklang cards`), das ausgedruckt und ausgeschnitten werden kann. Jedes Kärtchen enthält auf der einen Seite einen QR-Code (verlinkt auf den Spotify-Song) und auf der anderen Seite die Lösung: Veröffentlichungsjahr, Künstler und Titel. Druck: doppelseitig, „an langer Kante wenden".
+Die Kärtchen werden als PDF generiert (`zeitklang cards`), das ausgedruckt und ausgeschnitten werden kann. Jedes Kärtchen enthält auf der einen Seite einen QR-Code (verlinkt auf den Spotify-Song) und auf der anderen Seite Veröffentlichungsjahr, Künstler und Titel. Druck: doppelseitig, „an langer Kante wenden".
 
 ## Die Web-App (aktueller Stand: Login, Scan, Wiedergabe)
 
@@ -64,5 +62,5 @@ Geplant: volle PWA mit Spotify-Login und Wiedergabe per Web Playback SDK (`docs/
 - `docs/spotify-client.md` — Spotify-Client: Bedienung, Auth-Modi, SDK-Bug-Workarounds
 - `docs/durchstich.md` — Durchstich: QR-Scan im LAN (aktueller Umsetzungsschritt)
 - `docs/pwa-spezifikation.md` — Spezifikation der PWA: Spotify-Login, QR-Scan, Wiedergabe
-- `docs/web-variante.md` — Konzept für eine digitale Web-Variante des Spiels
+- `docs/web-variante.md` — historische Konzeptstudie für eine digitale Web-Variante
 - `AGENTS.md` — Repo-Übersicht und Befehle für KI-Agenten
