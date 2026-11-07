@@ -634,6 +634,71 @@ miniOpenEl.addEventListener("click", openSheet);
 sheetCloseBtn.addEventListener("click", () => closeSheet());
 sheetBackdrop.addEventListener("click", () => closeSheet());
 miniToggleEl.addEventListener("click", () => window.player?.togglePlay());
+
+// ---------- #18: Installation (Android beforeinstallprompt, iOS-Hinweis) ----------
+
+const installLoginBtn = document.getElementById("install-login");
+const installScanBtn = document.getElementById("install-scan");
+const iosHintEl = document.getElementById("ios-hint");
+
+// Android/Desktop-Chrome: Der Browser feuert beforeinstallprompt, sobald die
+// PWA installierbar ist (Manifest + Service Worker aus #17). preventDefault()
+// unterdrückt das eigene Mini-Banner des Browsers, stattdessen zeigen die
+// dezenten Ghost-Buttons (#57-Konkurrenz) den Weg. Sie leben in Login- bzw.
+// Guide-Sektion — die Sektions-Sichtbarkeit regelt, wo sie zu sehen sind.
+let deferredInstallPrompt = null;
+
+function showInstallButtons(shown) {
+    installLoginBtn.hidden = !shown;
+    installScanBtn.hidden = !shown;
+}
+
+window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    showInstallButtons(true);
+});
+
+// Tap löst den nativen Install-Dialog aus. Das Event ist danach verbraucht;
+// ob angenommen oder abgebrochen wurde, ist für die UI ohne Bedeutung
+// (abgebrochen → Buttons bleiben weg, Andreas-Entscheidung: kein Wegklick).
+async function promptInstall() {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice.catch(() => {});
+    deferredInstallPrompt = null;
+    showInstallButtons(false);
+}
+installLoginBtn.addEventListener("click", () => promptInstall());
+installScanBtn.addEventListener("click", () => promptInstall());
+
+// Nach der Installation feuert der Browser kein beforeinstallprompt mehr —
+// im Standalone-Modus erscheinen die Buttons nie wieder.
+window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    showInstallButtons(false);
+});
+
+// iOS kennt kein beforeinstallprompt — der Weg läuft über das Safari-Menü
+// („Teilen“ → „Zum Home-Bildschirm hinzufügen“). Der Banner erscheint genau
+// einmal pro Gerät (Akzeptenzkriterium): Das Flag wird beim ersten Anzeigen
+// gesetzt und nie zurückgesetzt, auch Wegklicken ist nur Kosmetik. Bereits
+// installiert (Standalone) → kein Hinweis. iPadOS tarnt sich als macOS,
+// deshalb der maxTouchPoints-Check.
+const isIOS =
+    /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+if (
+    isIOS &&
+    !window.navigator.standalone &&
+    !localStorage.getItem("zeitklang_install_hint")
+) {
+    localStorage.setItem("zeitklang_install_hint", "1");
+    iosHintEl.hidden = false;
+}
+document.getElementById("ios-hint-close").addEventListener("click", () => {
+    iosHintEl.hidden = true; // Flag steht schon — der Hinweis kommt nie wieder
+});
 init();
 
 // ---------- QR-Scan (§4, aus dem Durchstich) ----------
@@ -692,6 +757,9 @@ async function startScan() {
     // #47: Scan-Neustart gibt die Leiste zurück, wenn bereits ein Track
     // läuft (nach Stopp war sie ausgeblendet).
     miniPlayerEl.hidden = !trackLoaded || sheetOpen;
+    // #18: iOS-Banner weicht der aktiven Kamera aus (liegt sonst über den
+    // Torch-/Stopp-Overlays, #45) — er kommt nicht wieder (Flag-Kriterium).
+    if (!iosHintEl.hidden) iosHintEl.hidden = true;
     // #3: Torch-Support erst nach erfolgreichem Start prüfen — Button nur
     // zeigen, wenn das Gerät die Kamera-LED wirklich steuern kann.
     try {
