@@ -10,7 +10,7 @@
 // sonst bleibt der alte Stand im Cache hängen (Cleanup in activate
 // entsorgt die alten Versionen).
 
-const CACHE_VERSION = "v4"; // Quiz-Bezüge entfernt: Version bumped (#17-Regel)
+const CACHE_VERSION = "v5"; // CSP-Meta + Referrer-Policy (#78): Version bumped (#17-Regel)
 const CACHE_NAME = "zeitklang-" + CACHE_VERSION;
 
 const SHELL_URLS = [
