@@ -10,7 +10,7 @@
 // sonst bleibt der alte Stand im Cache hängen (Cleanup in activate
 // entsorgt die alten Versionen).
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2"; // #18: web/-Änderungen → Version bumped (#17-Regel)
 const CACHE_NAME = "zeitklang-" + CACHE_VERSION;
 
 const SHELL_URLS = [

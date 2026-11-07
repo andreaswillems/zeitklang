@@ -1047,3 +1047,108 @@ body:has(#login:not([hidden])) header h1 {
     height: 18px;
     fill: var(--text-dim);
 }
+
+/* ---------- #18: Installationshinweis (Android beforeinstallprompt, iOS-Banner) ---------- */
+
+/* Install-Button im Login unter der Premium-Badge: volle Breite wie der
+   Login-Button (#57/#56-Maße), dezent als Ghost-Button (Andreas-Entscheidung)
+   — konkurriert nicht mit dem grünen Spotify-Button. Sichtbarkeit steuert
+   app.js (beforeinstallprompt/appinstalled), [hidden] greift global. */
+#install-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: min(398px, calc(100vw - 32px));
+    min-height: 52px; /* Tap-Ziel (#56) */
+}
+#install-login svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+/* Install-Button in der Guide-Karte (#70). #49-Falle: Der Button liegt im
+   #reader-wrap, die Overlay-Regel #reader-wrap button (#45, ID+Element)
+   würde ihn zum runden 44-px-Overlay machen. Der 2-ID-Selektor schlägt sie
+   sicher — nach der #62-Lehre wird JEDE geteilte Property überschrieben
+   (position/top/left/right/bottom/z-index/display/width/height/padding/
+   border-radius/color/background/border/backdrop-filter). pointer-events:
+   auto, weil #guide als Ganzes pointer-events: none hat (#70) — sonst wäre
+   der Button nicht klickbar. Sichtbarkeit: Guide nur bei gestopptem Scanner,
+   Button selbst nur, wenn der Browser installieren kann (app.js). */
+#reader-wrap #install-scan {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    z-index: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    align-self: center;
+    width: fit-content;
+    height: auto;
+    margin-top: 4px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    pointer-events: auto;
+}
+#reader-wrap #install-scan svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+/* iOS-Banner (#18): schwebend oben im Band unter dem Header (gleiche
+   dokumentierte Näherung wie der Guide, #70-Nachtrag), Karten-Optik wie
+   #login-error. z-index 12: über Mini-Player-Leiste/#start (10), unter
+   Backdrop (15)/Sheet (20) — bei offenem Sheet vom Backdrop abgedunkelt.
+   Keine Animation (dezent); [hidden] greift über die Globalregel. */
+#ios-hint:not([hidden]) {
+    position: fixed;
+    top: calc(88px + env(safe-area-inset-top));
+    left: calc(16px + env(safe-area-inset-left));
+    right: calc(16px + env(safe-area-inset-right));
+    z-index: 12;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 10px 10px 10px 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+}
+#ios-hint p {
+    margin: 0;
+    flex: 1;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    text-align: left;
+}
+/* Wegklick-Button: 44-px-Tap-Ziel (#45-Maß), Ghost-Padding zurückgesetzt;
+   textlos, Label per aria-label im Markup. */
+#ios-hint-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+}
+#ios-hint-close svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
