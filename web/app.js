@@ -253,6 +253,14 @@ let authErrorTimer = null;
 // eine spezifischere SDK-Fehlermeldung (z. B. AUTH_ERROR_MSG) zu übergehen.
 const QUEUE_WAIT_MSG = "Verbinde mit Spotify — der Titel startet in Kürze.";
 const QUEUE_FAIL_MSG = "Verbindung zu Spotify fehlgeschlagen — bitte Seite neu laden.";
+// #17: Offline-Hinweise, #10-konform (kein Fachjargon, je ein nächster
+// Schritt): OFFLINE_MSG läuft über die globale Statuszeile (#status, in
+// Login und Scan sichtbar), OFFLINE_SCAN_MSG über #result beim Scan-Start
+// (#53-Muster: #result nur im Fehlerfall).
+const OFFLINE_MSG =
+    "Keine Internetverbindung. Scannen und Wiedergabe brauchen Internet — bitte WLAN oder Mobilfunk prüfen.";
+const OFFLINE_SCAN_MSG =
+    "Keine Internetverbindung — bitte wieder verbinden und erneut scannen.";
 // #6 Stufe 2: Nach dem Scan bleibt die App in der Scan-Ansicht (kontinuierlicher
 // Loop, das Player-Sheet (#37) öffnet sich nur über den Mini-Player). Der frühere
 // Auto-Wechsel (awaitingTrackState) ist entfallen — ein expliziter
@@ -498,7 +506,37 @@ function show(section) {
     miniPlayerEl.hidden = !trackLoaded || sheetOpen || !scannerActive;
 }
 
+// ---------- #17: Service Worker + Offline-Hinweis ----------
+
+// Andreas-Entscheidung zu #17: Offline-Hinweis über die bestehende
+// Statuszeile, kein eigener Banner. offlineShown verhindert, dass der
+// online-Zweig Queue-/SDK-Meldungen aus #9 wegputzt, die inzwischen auf
+// der Zeile stehen könnten.
+let offlineShown = false;
+function updateOnlineHint() {
+    if (!navigator.onLine) {
+        statusEl.textContent = OFFLINE_MSG;
+        offlineShown = true;
+    } else if (offlineShown) {
+        statusEl.textContent = "";
+        offlineShown = false;
+    }
+}
+window.addEventListener("online", updateOnlineHint);
+window.addEventListener("offline", updateOnlineHint);
+
 async function init() {
+    // #17: Service Worker registrieren — App-Shell offline ladbar, Android-
+    // Install-Prompt zuverlässig (#18). Spec §11: relativer Pfad wegen
+    // /zeitklang/. Non-blocking: Die App läuft auch ohne SW weiter, ein
+    // Fehler geht nur in die Konsole.
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+            .register("./sw.js")
+            .catch((err) => console.error("SW-Registrierung fehlgeschlagen:", err));
+    }
+    // #17: Stand beim Start setzen, falls die App offline geöffnet wird.
+    updateOnlineHint();
     try {
         await handleRedirect();
         accessToken = await getValidToken();
@@ -616,6 +654,13 @@ async function applyTorch(on) {
 // verhindert, der Scanner läuft kontinuierlich weiter).
 async function startScan() {
     if (scannerActive) return; // #6 Stufe 2: bereits laufend — kein Neustart
+    // #17: Offline keinen Kamera-Start wagen — die Wiedergabe bräche
+    // ohnehin sofort ab. Klarer Hinweis in #result (#53-Muster),
+    // #start bleibt sichtbar.
+    if (!navigator.onLine) {
+        resultEl.textContent = OFFLINE_SCAN_MSG;
+        return;
+    }
     await scanner.start(
         { facingMode: "environment" },
         {
