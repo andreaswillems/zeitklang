@@ -177,7 +177,8 @@ async function handleRedirect() {
             error === "access_denied" ? LOGIN_DENIED_MSG : LOGIN_GENERIC_MSG;
         throw err;
     }
-    if (params.get("state") !== sessionStorage.getItem(KEYS.state)) {
+    // #80: state-Parameter fehlt → auch ablehnen (sonst passiert null==null).
+    if (!params.get("state") || params.get("state") !== sessionStorage.getItem(KEYS.state)) {
         const err = new Error("Ungültiger state (CSRF-Schutz) — Login abgebrochen");
         err.userMsg = LOGIN_STATE_MSG; // #58
         throw err;
