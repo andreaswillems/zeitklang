@@ -484,7 +484,7 @@ function playScannedText(text) {
     // optional chaining, kein Fehler. Der Dubletten-Guard verhindert, dass
     // ignorierte Frames vibrieren.
     navigator.vibrate?.(80);
-    // #37: neuer Scan schiebt ein offenes Sheet zu — der Quiz-Flow bleibt
+    // #37: neuer Scan schiebt ein offenes Sheet zu — der Scan-Flow bleibt
     // flüssig, der Spoiler-Reset in playTrack greift wie heute.
     closeSheet();
     playTrack(trackId);

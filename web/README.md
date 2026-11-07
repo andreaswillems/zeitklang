@@ -1,6 +1,6 @@
 # Zeitklang Web-App (PWA)
 
-Musik-Quiz als PWA: QR-Codes auf den physischen Kärtchen scannen, der verlinkte Song spielt auf dem Handy, Titel und Interpret bleiben hinter einem Blur-Spoiler versteckt („Scannen · Hören · Einordnen“).
+Scanner-Player als PWA: QR-Codes auf den physischen Kärtchen scannen, der verlinkte Song spielt auf dem Handy; Titel und Interpret bleiben hinter einem Blur-Spoiler versteckt.
 
 - **Live:** https://andreaswillems.github.io/zeitklang/
 - **Spezifikation (verbindlich):** [`docs/pwa-spezifikation.md`](../docs/pwa-spezifikation.md), Konzept-Hintergrund: [`docs/web-variante.md`](../docs/web-variante.md)
@@ -51,7 +51,7 @@ web/
 - Installationshinweis auf Android/Desktop-Chrome (`beforeinstallprompt`, Ghost-Buttons in Login und Guide-Karte)
 - Meta-/Open-Graph-Tags für Link-Vorschauen
 
-**Offen im Backlog:** #10 (Fehlermeldungen final formulieren) und #12 (Quiz-Modus mit Rate-Eingabe im Sheet).
+**Offen im Backlog:** #10 (Fehlermeldungen final formulieren). Eine Quiz-Funktion oder ähnliche Spielmechanik ist vorerst nicht geplant.
 
 ## Hinweise für die Entwicklung
 
