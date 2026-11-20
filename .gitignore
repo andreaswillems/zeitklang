@@ -21,3 +21,6 @@ output/
 # Test/Lint-Caches
 .pytest_cache/
 .ruff_cache/
+
+# macos stuff
+.DS_Store
