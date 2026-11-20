@@ -10,7 +10,7 @@
 // sonst bleibt der alte Stand im Cache hängen (Cleanup in activate
 // entsorgt die alten Versionen).
 
-const CACHE_VERSION = "v6"; // App-Shell-Lock (#90): Version bumped (#17-Regel)
+const CACHE_VERSION = "v7"; // CSP: frame-src für SDK-iframe (#92): Version bumped (#17-Regel)
 const CACHE_NAME = "zeitklang-" + CACHE_VERSION;
 
 const SHELL_URLS = [
