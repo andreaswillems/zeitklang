@@ -13,10 +13,26 @@
     box-sizing: border-box;
 }
 
+/* #90: App-Shell-Lock — html/body haben feste Viewport-Höhe und sind
+   gegen Scrollen gesperrt, body zusätzlich gegen Overscroll (unterdrückt
+   den iOS-Rubber-Band-Bounce ab Safari 16). Wisch-Gesten verschieben
+   damit weder den Header noch den Hintergrund: Der radiale Gradient
+   bleibt an body verankert, das Dokument scrollt nie — main ist der
+   einzige Scroll-Container (nächste Regel). */
+html {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
 body {
     margin: 0;
-    min-height: 100vh;
-    min-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    overscroll-behavior: none;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: #fff;
     background:
@@ -29,9 +45,20 @@ body {
         calc(16px + env(safe-area-inset-left));
 }
 
+/* #90: main als einziger interner Scroll-Container — flex: 1 füllt die
+   Resthöhe unter dem stehenden Header, min-height: 0 erlaubt das
+   Schrumpfen unter die Inhaltshöhe (sonst greift overflow-y: auto im
+   Flex-Layout nicht), overscroll-behavior: contain hält Wisch-Gesten
+   im Container. Übergroßer Inhalt (kleine Screens) scrollt nur hier,
+   Header und Hintergrund bleiben unbewegt. */
 main {
     max-width: 430px;
+    width: 100%;
     margin: 0 auto;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 header {
