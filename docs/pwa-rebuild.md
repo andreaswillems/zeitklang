@@ -40,25 +40,24 @@ GitHub Pages.
 
 ## 2. Stack-Entscheidungen
 
-| Entscheidung | Festlegung | Begründung |
-|---|---|---|
-| Framework | **Preact** (`preact`, `@preact/signals`) | Kleinstes Bundle (~4–6 kb gzip) — wichtig auf Low-End-Handys mit Kamera + Audio; nahe am heutigen Vanilla-Code (JSX statt DOM-Manipulation); Signals sind ideal für den gekoppelten UI-State (Sheet/Mini-Player/Spoiler/Scanner) |
-| Build | **Vite** + `@preact/preset-vite` | `base: './'` löst den Pages-Base-Pfad `/zeitklang/` (Spec §11), precompilierte JSX-Templates sind CSP-konform (kein `eval`/Inline) |
-| Sprache | **TypeScript** (strict) | Der Umbau einer ungetesteten App braucht Typsicherheit sofort |
-| Tests | **Vitest** + `happy-dom` + `@testing-library/preact` | leichtgewichtigstes Setup; happy-dom ist schneller als jsdom |
-| PWA/Service Worker | **vite-plugin-pwa** mit `strategies: 'injectManifest'` (`src/sw.ts`) | volle Kontrolle über das Fetch-Verhalten (network-first Navigationen, damit `?code=…` nie gecacht wird); Precache-Liste + Hashes automatisch aus dem Build — das manuelle `CACHE_VERSION`-Bumpen entfällt |
-| Paketmanager | **npm** mit committed `package-lock.json` | kommt mit Node; CI ohne Zusatz-Installation |
-| Node-Version | **Node 26 LTS** via `rework/.nvmrc` (`26`) | neueste LTS (Codename „Lithium“, LTS seit 2026-10-28, Support bis April 2029); Node 27 ist Stand Nov. 2026 nur Alpha und wird nicht produktiv genutzt. `actions/setup-node` liest die Datei via `node-version-file` — lokal und CI nutzen dieselbe Quelle |
-| Lint + Format | **Biome** (`@biomejs/biome` v2) | ein Tool statt ESLint + Prettier (ein Binary, ein Config); `biome ci` im CI, `biome check --write` lokal; formatiert TS/TSX **und** die CSS-Module; Details §6.1 |
-| Pre-Commit-Hooks | **Husky v9 + lint-staged**, Hooks im Repo-Root `.husky/`, gescoped auf `rework/**` | `pre-commit`: Biome auto-fixt die staged rework-Files + `tsc`; `pre-push`: `vitest run` — beide über `npm --prefix rework`. `web/` wird nicht angefasst. CI bleibt Quelle der Wahrheit; Details §6.2 |
-| QR-Scan / QR-Generierung | `html5-qrcode` und `qrcode-generator` als **npm-Dependencies** | nicht mehr vendored; gehasht im Bundle, vom SW precachebar. `html5-qrcode` (~100 kb) wird per dynamischem `import()` erst beim ersten Scan geladen (eigener Chunk) |
-| Spotify SDK | bleibt externes Script `https://sdk.scdn.co/spotify-player.js` | CSP `script-src 'self' https://sdk.scdn.co` bleibt valide; Laden passiert im Adapter |
+| Entscheidung             | Festlegung                                                                         | Begründung                                                                                                                                                                                                                                                |
+| ------------------------ | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework                | **Preact** (`preact`, `@preact/signals`)                                           | Kleinstes Bundle (~4–6 kb gzip) — wichtig auf Low-End-Handys mit Kamera + Audio; nahe am heutigen Vanilla-Code (JSX statt DOM-Manipulation); Signals sind ideal für den gekoppelten UI-State (Sheet/Mini-Player/Spoiler/Scanner)                          |
+| Build                    | **Vite** + `@preact/preset-vite`                                                   | `base: './'` löst den Pages-Base-Pfad `/zeitklang/` (Spec §11), precompilierte JSX-Templates sind CSP-konform (kein `eval`/Inline)                                                                                                                        |
+| Sprache                  | **TypeScript** (strict)                                                            | Der Umbau einer ungetesteten App braucht Typsicherheit sofort                                                                                                                                                                                             |
+| Tests                    | **Vitest** + `happy-dom` + `@testing-library/preact`                               | leichtgewichtigstes Setup; happy-dom ist schneller als jsdom                                                                                                                                                                                              |
+| PWA/Service Worker       | **vite-plugin-pwa** mit `strategies: 'injectManifest'` (`src/sw.ts`)               | volle Kontrolle über das Fetch-Verhalten (network-first Navigationen, damit `?code=…` nie gecacht wird); Precache-Liste + Hashes automatisch aus dem Build — das manuelle `CACHE_VERSION`-Bumpen entfällt                                                 |
+| Paketmanager             | **npm** mit committed `package-lock.json`                                          | kommt mit Node; CI ohne Zusatz-Installation                                                                                                                                                                                                               |
+| Node-Version             | **Node 26 LTS** via Root-`.tool-versions` (`nodejs 26.13.1`, committed)                                        | neueste LTS (Codename „Lithium“, LTS seit 2026-10-28, Support bis April 2029); Node 27 ist Stand Nov. 2026 nur Alpha und wird nicht produktiv genutzt. `actions/setup-node` liest die Root-Datei via `node-version-file: .tool-versions` — lokal (asdf) und CI nutzen dieselbe Quelle |
+| Lint + Format            | **Biome** (`@biomejs/biome` v2)                                                    | ein Tool statt ESLint + Prettier (ein Binary, ein Config); `biome ci` im CI, `biome check --write` lokal; formatiert TS/TSX **und** die CSS-Module; Details §6.1                                                                                          |
+| Pre-Commit-Hooks         | **Husky v9 + lint-staged**, Hooks im Repo-Root `.husky/`, gescoped auf `rework/**` | `pre-commit`: Biome auto-fixt die staged rework-Files + `tsc`; `pre-push`: `vitest run` — beide über `npm --prefix rework`. `web/` wird nicht angefasst. CI bleibt Quelle der Wahrheit; Details §6.2                                                      |
+| QR-Scan / QR-Generierung | `html5-qrcode` und `qrcode-generator` als **npm-Dependencies**                     | nicht mehr vendored; gehasht im Bundle, vom SW precachebar. `html5-qrcode` (~100 kb) wird per dynamischem `import()` erst beim ersten Scan geladen (eigener Chunk)                                                                                        |
+| Spotify SDK              | bleibt externes Script `https://sdk.scdn.co/spotify-player.js`                     | CSP `script-src 'self' https://sdk.scdn.co` bleibt valide; Laden passiert im Adapter                                                                                                                                                                      |
 
 ## 3. Repo-Layout
 
 ```
 rework/                     # die neue App — web/ bleibt bis Phase 7 (Cutover) unberührt
-├── .nvmrc                    # "26" (Node 26 LTS — neueste LTS, siehe §2)
 ├── package.json / package-lock.json   # lint-staged-Config (Glob: rework/**/*.{ts,tsx,css,json})
 ├── vite.config.ts            # base './', outDir 'dist', VitePWA injectManifest, preview.https (mkcert-Cert, §4)
 ├── tsconfig.json             # strict, jsxImportSource: preact
@@ -106,7 +105,9 @@ rework/                     # die neue App — web/ bleibt bis Phase 7 (Cutover)
 └── dist/                     # Build-Output, gitignored; wird erst nach Cutover (Phase 7) von Pages und `zeitklang serve` ausgeliefert
 ```
 
-Daneben im **Repo-Root**: `.husky/pre-commit` + `.husky/pre-push` (Hooks laufen nur
+Daneben im **Repo-Root**: `.tool-versions` (`nodejs 26.13.1`, committed — einzige
+Node-Versions-Quelle für lokal (asdf) und CI, §2), `.husky/pre-commit` +
+`.husky/pre-push` (Hooks laufen nur
 auf `rework/`, §6.2). Die alte App in `web/` (`app.js`, `style.css`, `config.js`,
 `sw.js`, `vendor/`) bleibt bis Phase 7 (Cutover) vollständig unberührt und live —
 Git-History bleibt die Sicherung.
@@ -129,7 +130,7 @@ npx vite preview --port 8080 # liefert rework/dist auf 0.0.0.0:8080
 zeigt bis zum Cutover auf die alte App (`zeitklang serve` liefert `web/`). Deshalb
 testet man die rework-App lokal auf Port 8080 via `vite preview` — mit TLS über
 das mkcert-Zertifikat aus `.cache/` (`preview.https` in `vite.config.ts`, z. B.
-`.cache/serve-127.0.0.1.pem`); dann passt der Redirect und die **neue** App
+`.cache/serve-127.0.0.1.pem`, einmalig erzeugt via `mkcert -cert-file .cache/serve-127.0.0.1.pem -key-file .cache/serve-127.0.0.1-key.pem 127.0.0.1 localhost` — analog `serve.py` `ensure_cert`, `.cache/` ist gitignored, das Spotify-Dashboard bleibt unverändert); dann passt der Redirect und die **neue** App
 empfängt `/?code=…` selbst. `npm run dev` (5173) bleibt für reines Komponenten-Dev
 ohne Login. Nach dem Cutover (Phase 7) übernimmt `zeitklang serve` Port 8080 mit
 `rework/dist`.
@@ -164,7 +165,7 @@ Im Cutover (Phase 7) zwei Varianten für `zeitklang serve`:
 - `.github/workflows/pages.yml` bleibt bis Phase 7 **unverändert** — Pages deployt
   weiter die alte App aus `web/`.
 - Neuer Workflow `.github/workflows/rework-ci.yml` (push + PR, `paths: rework/**, .husky/**`):
-  `actions/setup-node@v4` (`node-version-file: rework/.nvmrc`) →
+  `actions/setup-node@v4` (`node-version-file: .tool-versions`, Root-Datei) →
   `HUSKY=0 npm ci` (working-directory `rework`, Hooks im CI aus) →
   `npm run ci` (Biome: Lint + Format + Imports — non-zero Exit bei Befunden) →
   `npm run typecheck` (`tsc --noEmit` — Biome ersetzt den Typechecker nicht) →
@@ -251,7 +252,7 @@ wandern in `main.tsx` bzw. in die Stores.
     400 → Refresh-Token verwerfen), `handleRedirect` (state-Mismatch → CSRF-Fehler,
     `access_denied` → Meldung, Erfolg → Token-Tausch + `history.replaceState`,
     `forceConsent`-Flag-Logik). Deps: InMemory-Storage, gemocktes `fetch`,
-    `crypto.subtle` (in Node 22 global vorhanden).
+    `crypto.subtle` (in Node 26 global vorhanden).
   - `config.test.ts`: `redirectUriForHost("127.0.0.1")` → lokaler Callback,
     sonst Pages-URL.
 - **`state/` (Unit mit gemockten Adaptern):** `vi.mock("../adapters/spotify-sdk")`
@@ -288,13 +289,13 @@ Config-File, schnell genug für jeden CI-Lauf:
     Migrieren einmalig mit `biome format --write` durchlaufen.
 - **Scripts in `package.json`:**
 
-  | Script | Befehl | Zweck |
-  |---|---|---|
-  | `npm run check` | `biome check .` | Lint + Format + Imports, read-only |
-  | `npm run check:fix` | `biome check --write .` | Auto-Fix lokal |
-  | `npm run ci` | `biome ci .` | CI-Modus: Exit ≠ 0 bei Befunden, keine Writes |
-  | `npm run typecheck` | `tsc --noEmit` | Typecheck bleibt bei tsc |
-  | `npm test` | `vitest run` | Tests (unverändert) |
+  | Script              | Befehl                  | Zweck                                         |
+  | ------------------- | ----------------------- | --------------------------------------------- |
+  | `npm run check`     | `biome check .`         | Lint + Format + Imports, read-only            |
+  | `npm run check:fix` | `biome check --write .` | Auto-Fix lokal                                |
+  | `npm run ci`        | `biome ci .`            | CI-Modus: Exit ≠ 0 bei Befunden, keine Writes |
+  | `npm run typecheck` | `tsc --noEmit`          | Typecheck bleibt bei tsc                      |
+  | `npm test`          | `vitest run`            | Tests (unverändert)                           |
 
 - **Regeln:** Start mit `recommended`; projekt-spezifische Ausnahmen (z. B.
   `noExplicitAny` in den Adapter-Typen fürs SDK) als `overrides` in `biome.json`,
@@ -381,16 +382,16 @@ dann liegt `rework/` in main, `web/` bleibt unverändert live (Pages deployt wei
 `web/`). **Phase 7 (Cutover)** wird erst nach ausdrücklicher Freigabe durch Andreas
 ausgeführt.
 
-| Phase | Inhalt | Done-Kriterium |
-|---|---|---|
-| **0 — Setup** | `rework/package.json` (inkl. `@biomejs/biome`, `husky`, `lint-staged`, `"prepare": "husky"`, lint-staged-Config), `rework/.nvmrc`, `tsconfig.json`, `vite.config.ts`, `vitest.config.ts`, `biome.json`, Root-`.husky/pre-commit` + `.husky/pre-push` (`cd rework && npx husky init`), Root-`.gitignore` (additiv: `node_modules/`, `.husky/_`), leere `rework/src/`-Struktur, `rework/scripts/check-secrets.mjs` + `"check:secrets"`-Script, `.github/workflows/rework-ci.yml` (läuft grün auf leerem Projekt) — **`app/` und `web/` werden in Phase 0 nicht angefasst** | `cd rework && npm ci && npm run ci && npm run typecheck && npm test && npm run build` lokal grün; rework-CI grün inkl. `check:secrets`; `uv run pytest` unverändert grün; Hook-Test: unformatierte Datei in `rework/` stagen → `git commit` fixt bzw. bricht sauber ab |
-| **1 — lib + Tests** | `rework/src/lib/*` (pkce, track-id, scan-guard, errors, tokens, redirect, storage, config) + alle Unit-Tests | 100 % der lib-Tests grün; `tsc --noEmit` sauber |
-| **2 — adapters + stores** | `rework/src/adapters/*`, `rework/src/state/*` + Store-Tests mit gemockten Adaptern | Store-Tests grün (Player-Queue, Fehler-Mapping, Scanner-Guard, Auth-Flow) |
-| **3 — Komponenten + Views** | `rework/src/components/*`, `app.tsx`, `main.tsx`, `index.html`, CSS-Migration (`global.css` + Module), Parity-Checkliste §10 abarbeiten | `npm run build` produziert `rework/dist/`; App rendert alle Zustände; Parity-Checkliste vollständig |
-| **4 — PWA** | `rework/public/` (Manifest, Icons), `rework/src/sw.ts` (injectManifest), SW-Registrierung, CSP-Verifizierung im gebauten `dist/index.html` | SW precachet Build-Assets; Flugmodus-Test: Shell lädt offline; `?code=`-Navigation landet nie im Cache |
-| **5 — Doku + rework-CI finalisieren** | `rework/README.md`, `AGENTS.md` Commands (`cd rework && npm …`), diese Datei Status; `rework-ci.yml` auf finalen Stand | rework-CI grün; Doku aktuell |
-| **6 — Smoke lokal (rework)** | Manueller Smoke-Test Spec §10.1–6 gegen `vite preview --port 8080` (TLS via mkcert, §4) bzw. `npm run dev` — **ohne Pages**, `web/` bleibt live | Spec §10.1–6 bestanden |
-| **7 — Cutover (nur nach ausdrücklicher Freigabe durch Andreas!)** | `pages.yml` umbauen (`setup-node` → `HUSKY=0 npm ci` in `rework` → build → `path: ./rework/dist`), `web/` löschen, `web/README.md` durch Verweis ersetzen, Pages-Smoke Spec §10.7–8 inkl. iOS-Safari. Python nur nach Variante A (§4): eine Zeile `WEB_DIR` in `config.py` + `test_serve.py`-Fixture — oder Variante B: gar keine Python-Änderung, `serve` streichen | Spec §10 vollständig bestanden auf Pages; Pages deployt `rework/dist`; `web/` entfernt; `uv run pytest` grün |
+| Phase                                                             | Inhalt                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Done-Kriterium                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **0 — Setup**                                                     | `rework/package.json` (inkl. `@biomejs/biome`, `husky`, `lint-staged`, `"prepare": "husky"`, lint-staged-Config), `tsconfig.json`, `vite.config.ts`, `vitest.config.ts`, `biome.json`, Root-`.husky/pre-commit` + `.husky/pre-push` (`cd rework && npx husky init`), Root-`.tool-versions` (commit, `nodejs 26.13.1`), Root-`.gitignore` (additiv: `node_modules/`, `.husky/_`), leere `rework/src/`-Struktur, `rework/scripts/check-secrets.mjs` + `"check:secrets"`-Script, `.github/workflows/rework-ci.yml` (läuft grün auf leerem Projekt) — **`app/` und `web/` werden in Phase 0 nicht angefasst** | `cd rework && npm ci && npm run ci && npm run typecheck && npm test && npm run build` lokal grün; rework-CI grün inkl. `check:secrets`; `uv run pytest` unverändert grün; Hook-Test: unformatierte Datei in `rework/` stagen → `git commit` fixt bzw. bricht sauber ab |
+| **1 — lib + Tests**                                               | `rework/src/lib/*` (pkce, track-id, scan-guard, errors, tokens, redirect, storage, config) + alle Unit-Tests                                                                                                                                                                                                                                                                                                                                                                                                                                                             | 100 % der lib-Tests grün; `tsc --noEmit` sauber                                                                                                                                                                                                                        |
+| **2 — adapters + stores**                                         | `rework/src/adapters/*`, `rework/src/state/*` + Store-Tests mit gemockten Adaptern                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Store-Tests grün (Player-Queue, Fehler-Mapping, Scanner-Guard, Auth-Flow)                                                                                                                                                                                              |
+| **3 — Komponenten + Views**                                       | `rework/src/components/*`, `app.tsx`, `main.tsx`, `index.html`, CSS-Migration (`global.css` + Module), Parity-Checkliste §10 abarbeiten                                                                                                                                                                                                                                                                                                                                                                                                                                  | `npm run build` produziert `rework/dist/`; App rendert alle Zustände; Parity-Checkliste vollständig                                                                                                                                                                    |
+| **4 — PWA**                                                       | `rework/public/` (Manifest, Icons), `rework/src/sw.ts` (injectManifest), SW-Registrierung, CSP-Verifizierung im gebauten `dist/index.html`                                                                                                                                                                                                                                                                                                                                                                                                                               | SW precachet Build-Assets; Flugmodus-Test: Shell lädt offline; `?code=`-Navigation landet nie im Cache                                                                                                                                                                 |
+| **5 — Doku + rework-CI finalisieren**                             | `rework/README.md`, `AGENTS.md` Commands (`cd rework && npm …`), diese Datei Status; `rework-ci.yml` auf finalen Stand                                                                                                                                                                                                                                                                                                                                                                                                                                                   | rework-CI grün; Doku aktuell                                                                                                                                                                                                                                           |
+| **6 — Smoke lokal (rework)**                                      | Manueller Smoke-Test Spec §10.1–6 gegen `vite preview --port 8080` (TLS via mkcert, §4) bzw. `npm run dev` — **ohne Pages**, `web/` bleibt live                                                                                                                                                                                                                                                                                                                                                                                                                          | Spec §10.1–6 bestanden                                                                                                                                                                                                                                                 |
+| **7 — Cutover (nur nach ausdrücklicher Freigabe durch Andreas!)** | `pages.yml` umbauen (`setup-node` → `HUSKY=0 npm ci` in `rework` → build → `path: ./rework/dist`), `web/` löschen, `web/README.md` durch Verweis ersetzen, Pages-Smoke Spec §10.7–8 inkl. iOS-Safari. Python nur nach Variante A (§4): eine Zeile `WEB_DIR` in `config.py` + `test_serve.py`-Fixture — oder Variante B: gar keine Python-Änderung, `serve` streichen                                                                                                                                                                                                     | Spec §10 vollständig bestanden auf Pages; Pages deployt `rework/dist`; `web/` entfernt; `uv run pytest` grün                                                                                                                                                           |
 
 ## 10. Parity-Checkliste (aus `web/README.md` „Umsetzungsstand" + Spec)
 
@@ -410,44 +411,57 @@ ausgeführt.
 
 ## 11. Mapping alt → neu
 
-| Alt (`web/`) | Neu (`rework/src/`) |
-|---|---|
-| `config.js` | `lib/config.ts` (`redirectUriForHost(hostname)` als pure Funktion) |
-| `app.js` Auth-Teil (PKCE, Tokens, Redirect, Logout) | `lib/pkce.ts`, `lib/tokens.ts`, `lib/redirect.ts`, `state/auth.ts` |
-| `app.js` Player-Teil (SDK, Queue, Fehler-Mapping) | `adapters/spotify-sdk.ts`, `state/player.ts`, `lib/errors.ts` |
-| `app.js` Scan-Teil (html5-qrcode, Torch, Guard, Vibration) | `adapters/qr-scanner.ts`, `state/scanner.ts`, `lib/scan-guard.ts`, `lib/track-id.ts` |
-| `app.js` Sheet/Mini-Player/Share/Install/Status | `state/ui.ts`, `components/PlayerSheet.tsx`, `MiniPlayer.tsx`, `ShareDialog.tsx`, `adapters/share-qr.ts` |
-| `index.html` Sektionen | `components/LoginView.tsx`, `ScanView.tsx`, `LoadingView.tsx`, `icons.tsx` |
-| `style.css` | `styles/global.css` + `*.module.css` |
-| `sw.js` (manuell, CACHE_VERSION) | `src/sw.ts` (injectManifest, Hash-Precache) |
-| `vendor/html5-qrcode.min.js`, `vendor/qrcode-generator.js` | npm-Dependencies, gebündelt |
-| `manifest.webmanifest`, `icon.png`, `icons/` | `public/` (unverändert) |
+| Alt (`web/`)                                               | Neu (`rework/src/`)                                                                                      |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `config.js`                                                | `lib/config.ts` (`redirectUriForHost(hostname)` als pure Funktion)                                       |
+| `app.js` Auth-Teil (PKCE, Tokens, Redirect, Logout)        | `lib/pkce.ts`, `lib/tokens.ts`, `lib/redirect.ts`, `state/auth.ts`                                       |
+| `app.js` Player-Teil (SDK, Queue, Fehler-Mapping)          | `adapters/spotify-sdk.ts`, `state/player.ts`, `lib/errors.ts`                                            |
+| `app.js` Scan-Teil (html5-qrcode, Torch, Guard, Vibration) | `adapters/qr-scanner.ts`, `state/scanner.ts`, `lib/scan-guard.ts`, `lib/track-id.ts`                     |
+| `app.js` Sheet/Mini-Player/Share/Install/Status            | `state/ui.ts`, `components/PlayerSheet.tsx`, `MiniPlayer.tsx`, `ShareDialog.tsx`, `adapters/share-qr.ts` |
+| `index.html` Sektionen                                     | `components/LoginView.tsx`, `ScanView.tsx`, `LoadingView.tsx`, `icons.tsx`                               |
+| `style.css`                                                | `styles/global.css` + `*.module.css`                                                                     |
+| `sw.js` (manuell, CACHE_VERSION)                           | `src/sw.ts` (injectManifest, Hash-Precache)                                                              |
+| `vendor/html5-qrcode.min.js`, `vendor/qrcode-generator.js` | npm-Dependencies, gebündelt                                                                              |
+| `manifest.webmanifest`, `icon.png`, `icons/`               | `public/` (unverändert)                                                                                  |
 
 ## 12. Risiken und Mitigationen
 
-| Risiko | Mitigation |
-|---|---|
-| CSP-Verletzung durch Vite-Build (Inline-Scripts/data-URLs) | `assetsInlineLimit: 0`; CSP-Meta im Entry; SW-Registrierung ohne Inline-Snippet; manueller Smoke-Test im Flugmodus |
-| `base: './'` + Service-Worker-Scope auf Pages (`/zeitklang/`) | SW-Pfad relativ registrieren; Precache relativ; Pages-Deploy testet §10.7 |
-| `injectManifest` + TS (DOM vs. WebWorker-Typen in `sw.ts`) | Bewährtes Muster: Modul-Scope `declare let self: ServiceWorkerGlobalScope`; `tsc --noEmit` in CI fängt Regressionen |
-| Node-Version driftet zwischen lokal und CI auseinander | `.nvmrc` ist die einzige Quelle (`setup-node` mit `node-version-file`); bei neuem LTS nur diese Datei bumpen — ab Node 27 erscheint jährlich eine neue LTS-Major |
-| html5-qrcode im Test/Build | Adapter kapselt dynamisches `import()`; in Tests `vi.mock` des Adapters; eigener Lazy-Chunk hält den Initial-Bundle klein |
-| OAuth-Dev-Loop in der Parallelphase (Redirect-URI zeigt bis Cutover auf die alte App) | rework-App lokal auf Port 8080 via `vite preview` mit mkcert-TLS (`preview.https`), `npm run dev` (5173) nur ohne Login (§4); nach Phase 7 übernimmt `zeitklang serve` |
-| Zwei Apps parallel: Pages und `zeitklang serve` liefern bis Cutover die alte App | `pages.yml` und `serve.py` bleiben bis Phase 7 unverändert; Cutover erst nach ausdrücklicher Freigabe; rework-CI läuft unabhängig auf `rework/**` |
-| Husky-Hooks im Repo-Root könnten versehentlich `web/` anfassen | lint-staged-Glob scoped auf `rework/**/*`; pre-commit/pre-push rufen nur `npm --prefix rework …` auf (§6.2) |
-| `crypto.subtle` in Tests | Node ≥ 20 stellt `crypto` global bereit; happy-dom-Umgebung übernimmt das |
-| Client Secret landet versehentlich in `rework/` (src oder Build-Output) | Secret-Scan läuft Python-frei in `rework-ci.yml` (`npm run check:secrets` scannt `rework/src` + `rework/dist`, exkl. `node_modules/`); lokal liest das Script `../.env`, im CI das Actions-Secret |
-| Verhaltensverlust beim Umzug (die Issue-Kommentare dokumentieren viele Detailentscheidungen) | Parity-Checkliste §10; Issue-Kommentare werden mit in die neuen Dateien übernommen; manueller Smoke-Test vor Merge |
+| Risiko                                                                                       | Mitigation                                                                                                                                                                                        |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CSP-Verletzung durch Vite-Build (Inline-Scripts/data-URLs)                                   | `assetsInlineLimit: 0`; CSP-Meta im Entry; SW-Registrierung ohne Inline-Snippet; manueller Smoke-Test im Flugmodus                                                                                |
+| `base: './'` + Service-Worker-Scope auf Pages (`/zeitklang/`)                                | SW-Pfad relativ registrieren; Precache relativ; Pages-Deploy testet §10.7                                                                                                                         |
+| `injectManifest` + TS (DOM vs. WebWorker-Typen in `sw.ts`)                                   | Bewährtes Muster: Modul-Scope `declare let self: ServiceWorkerGlobalScope`; `tsc --noEmit` in CI fängt Regressionen                                                                               |
+| Node-Version driftet zwischen lokal und CI auseinander                                       | Root-`.tool-versions` (committed) ist die einzige Quelle (`setup-node` mit `node-version-file: .tool-versions`); bei neuem LTS nur diese Datei bumpen — ab Node 27 erscheint jährlich eine neue LTS-Major                                  |
+| html5-qrcode im Test/Build                                                                   | Adapter kapselt dynamisches `import()`; in Tests `vi.mock` des Adapters; eigener Lazy-Chunk hält den Initial-Bundle klein                                                                         |
+| OAuth-Dev-Loop in der Parallelphase (Redirect-URI zeigt bis Cutover auf die alte App)        | rework-App lokal auf Port 8080 via `vite preview` mit mkcert-TLS (`preview.https`), `npm run dev` (5173) nur ohne Login (§4); nach Phase 7 übernimmt `zeitklang serve`                            |
+| Zwei Apps parallel: Pages und `zeitklang serve` liefern bis Cutover die alte App             | `pages.yml` und `serve.py` bleiben bis Phase 7 unverändert; Cutover erst nach ausdrücklicher Freigabe; rework-CI läuft unabhängig auf `rework/**`                                                 |
+| Husky-Hooks im Repo-Root könnten versehentlich `web/` anfassen                               | lint-staged-Glob scoped auf `rework/**/*`; pre-commit/pre-push rufen nur `npm --prefix rework …` auf (§6.2)                                                                                       |
+| `crypto.subtle` in Tests                                                                     | Node ≥ 20 stellt `crypto` global bereit; happy-dom-Umgebung übernimmt das                                                                                                                         |
+| Client Secret landet versehentlich in `rework/` (src oder Build-Output)                      | Secret-Scan läuft Python-frei in `rework-ci.yml` (`npm run check:secrets` scannt `rework/src` + `rework/dist`, exkl. `node_modules/`); lokal liest das Script `../.env`, im CI das Actions-Secret |
+| Verhaltensverlust beim Umzug (die Issue-Kommentare dokumentieren viele Detailentscheidungen) | Parity-Checkliste §10; Issue-Kommentare werden mit in die neuen Dateien übernommen; manueller Smoke-Test vor Merge                                                                                |
 
-## 13. Offene Punkte (bei Umsetzung zu klären)
+## 13. Entscheidungen (mit Andreas abgestimmt, 2026-11)
 
-1. Biome-Config: 4 Spaces, doppelte Quotes, `lineWidth: 90` — exakt der bisherige
+1. **Node-Pinning:** Root-`.tool-versions` (`nodejs 26.13.1`) wird **committed** und
+   ist die einzige Quelle für lokal (asdf) und CI (`node-version-file:
+   .tool-versions`) — es gibt kein `rework/.nvmrc` (§2, §3, §4).
+2. **Branching:** Arbeit auf Branch `pwa-rebuild`; Phasen 0–6 landen per Merge in
+   `main`; Phase 7 (Cutover) erst nach ausdrücklicher Freigabe (§9).
+3. **Cutover-Variante A entschieden:** `zeitklang serve` bleibt — Phase 7 ändert
+   nur `WEB_DIR` in `config.py` (+ `test_serve.py`-Fixture). Variante B (Python
+   streichen) ist verworfen (§4).
+4. **Lokaler OAuth in der Parallelphase:** mkcert-Cert `serve-127.0.0.1.pem` wird
+   einmalig lokal in `.cache/` erzeugt (gitignored); das Spotify-Dashboard bleibt
+   unverändert (§4).
+5. **pre-push-Hook läuft bei jedem Push** (`npm --prefix rework test`) — einfach,
+   Projekt klein (§6.2).
+6. **Kein PR-Preview-Deploy:** Phase 6 ist rein lokaler Smoke gegen
+   `vite preview --port 8080`; Pages-Smoke erst nach dem Cutover in Phase 7 (§9).
+7. Biome-Config: 4 Spaces, doppelte Quotes, `lineWidth: 90` — exakt der bisherige
    Stil in `app.js` (§6.1), damit der Diff beim Migrieren klein bleibt.
-2. Ob `@preact/signals` oder Preact-eigene `useState` in Komponenten: Store-Signals global, Komponenten lesen Signals direkt (kein Prop-Drilling).
-3. `qrcode-generator` hat offizielle Typen (`@types/qrcode-generator`); html5-qrcode bringt eigene Typen mit.
-4. Ordnername `rework/` ist bestätigt; Husky-Hooks liegen zwingend im Repo-Root
-   (git-Hooks), sind aber per lint-staged-Glob und `npm --prefix rework` auf die
-   neue App beschränkt (§6.2).
-5. Cutover-Variante für `zeitklang serve`: A (eine Zeile `WEB_DIR` in `config.py`,
-   `serve` bleibt) oder B (gar keine Python-Änderung, `serve` streichen, lokal
-   `vite preview`) — Entscheidung bei Phase 7 (§4).
+8. State: `@preact/signals` global in den Stores, Komponenten lesen Signals direkt
+   (kein Prop-Drilling) — nicht Preact-eigenes `useState` für globalen State.
+9. `qrcode-generator` hat offizielle Typen (`@types/qrcode-generator`); html5-qrcode bringt eigene Typen mit.
+10. Ordnername `rework/` ist bestätigt; Husky-Hooks liegen zwingend im Repo-Root
+    (git-Hooks), sind aber per lint-staged-Glob und `npm --prefix rework` auf die
+    neue App beschränkt (§6.2).
