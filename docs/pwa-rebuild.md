@@ -28,10 +28,15 @@ GitHub Pages.
   manueller Smoke-Test nach Spec §10 bleibt bestehen). Playwright kann später
   für den Login-Screen ergänzt werden.
 - Kein ESLint separat — Biome übernimmt Lint + Format (§6.1).
-- **Kein Eingriff in die bestehende App:** `web/`, `serve.py`, `pages.yml` und die
-  Python-Tests bleiben bis Phase 7 (Cutover) unverändert. Die neue App entsteht
-  ausschließlich in `rework/` — plus additive Root-Einträge (`.husky/`,
+- **Kein Eingriff in die bestehende App während des Parallelbetriebs:** `web/`,
+  `app/` und `pages.yml` bleiben bis Phase 7 (Cutover) unverändert. Die neue App
+  entsteht ausschließlich in `rework/` — plus additive Root-Einträge (`.husky/`,
   `.gitignore`-Zeilen), die `web/` nicht verändern (§4, §6.2).
+- **Die PWA braucht produktiv kein Python:** GitHub Pages liefert `rework/dist`
+  statisch aus (reiner Actions-Workflow). Änderungen an `app/` betreffen nur den
+  lokalen Dev-Server `zeitklang serve` und zwei Tests — und selbst die sind
+  optional (§4: Variante A = eine Zeile in `config.py`, Variante B = gar keine
+  Python-Änderung).
 
 ## 2. Stack-Entscheidungen
 
@@ -129,19 +134,30 @@ empfängt `/?code=…` selbst. `npm run dev` (5173) bleibt für reines Komponent
 ohne Login. Nach dem Cutover (Phase 7) übernimmt `zeitklang serve` Port 8080 mit
 `rework/dist`.
 
-### `zeitklang serve` (Python-Anpassung) — erst Phase 7 (Cutover)
+### Python (`app/`) — produktiv nicht nötig, nur Cutover-Minimum
 
-- `config.py`: `WEB_DIR` auf `rework/` umbiegen bzw. neue Konstante
-  `WEB_DIST_DIR = PROJECT_ROOT / "rework" / "dist"`.
-- `serve.py`: liefert `rework/dist`; fehlt `dist/index.html`, bricht der Start mit
-  klarem Hinweis ab: „`cd rework && npm install && npm run build` zuerst".
-- `test_serve.py`: `create_app(static_dir: Path | None = None)` (Default
-  `WEB_DIST_DIR`); Tests übergeben ein tmp-Verzeichnis mit eigener `index.html`
-  (Fixture statt `id="reader"`-Assertion auf den echten Build).
-- `test_web_assets.py`: scannt künftig `web/` **und** `rework/` rekursiv nach dem
-  Client Secret, `node_modules/` ausgeschlossen. In Phase 0 nur die **additive**
-  Erweiterung um `rework/` (liest nur, verändert nichts an `web/`); die
-  Konsolidierung (nur noch `rework/`) passiert im Cutover.
+**Grundsatz: Die PWA läuft produktiv vollständig ohne Python** — `pages.yml`
+deployt `rework/dist` statisch. Lokal ist `vite preview --port 8080` mit mkcert-TLS
+(§4 Lokal) die Python-freie Alternative zu `zeitklang serve`.
+
+Der **Secret-Scan** (heute `test_web_assets.py` über `web/`) wird ab Phase 0
+**Python-frei** in die rework-CI verlagert: `rework/scripts/check-secrets.mjs`
+liest das Secret aus `process.env.SPOTIFY_CLIENT_SECRET` (CI) bzw. `../.env`
+(lokal) und durchsucht `rework/src` + `rework/dist` (nach dem Build), exkl.
+`node_modules/` → npm-Script `check:secrets`, Schritt in `rework-ci.yml` nach
+`npm run build`. Damit fasst Phase 0–6 kein Python an.
+
+Im Cutover (Phase 7) zwei Varianten für `zeitklang serve`:
+
+- **Variante A (minimal, wenn `serve` bleiben soll):** eine Zeile in `config.py` —
+  `WEB_DIR = PROJECT_ROOT / "rework" / "dist"`. `serve.py` bleibt unverändert und
+  liefert dann `rework/dist` inkl. SPA-Fallback. Einzige Test-Anpassung:
+  `test_serve.py` mit `create_app(static_dir=…)`-Fixture, weil der Preact-Build
+  das DOM erst rendert (`id="reader"` steht nicht mehr im statischen HTML).
+- **Variante B (gar keine Python-Änderung):** `zeitklang serve` wird im Cutover
+  gestrichen (lokal nur `vite preview`), `test_serve.py`/`test_web_assets.py`
+  werden mit `web/` entfernt bzw. obsolet (Secret-Scan läuft nur noch in
+  `rework-ci.yml`).
 
 ### CI / GitHub Pages
 
@@ -152,7 +168,9 @@ ohne Login. Nach dem Cutover (Phase 7) übernimmt `zeitklang serve` Port 8080 mi
   `HUSKY=0 npm ci` (working-directory `rework`, Hooks im CI aus) →
   `npm run ci` (Biome: Lint + Format + Imports — non-zero Exit bei Befunden) →
   `npm run typecheck` (`tsc --noEmit` — Biome ersetzt den Typechecker nicht) →
-  `npm test` → `npm run build` (Build-Smoke).
+  `npm test` → `npm run build` (Build-Smoke) → `npm run check:secrets`
+  (Secret-Scan auf `rework/dist` + `rework/src`, Python-frei, ersetzt langfristig
+  `test_web_assets.py`).
 - `.gitignore` (Root, additive Ergänzung in Phase 0): `node_modules/` (matcht
   `rework/node_modules/`), `.husky/_`. `dist/` ist bereits global ignoriert und
   matcht damit auch `rework/dist/`.
@@ -365,14 +383,14 @@ ausgeführt.
 
 | Phase | Inhalt | Done-Kriterium |
 |---|---|---|
-| **0 — Setup** | `rework/package.json` (inkl. `@biomejs/biome`, `husky`, `lint-staged`, `"prepare": "husky"`, lint-staged-Config), `rework/.nvmrc`, `tsconfig.json`, `vite.config.ts`, `vitest.config.ts`, `biome.json`, Root-`.husky/pre-commit` + `.husky/pre-push` (`cd rework && npx husky init`), Root-`.gitignore` (additiv: `node_modules/`, `.husky/_`), leere `rework/src/`-Struktur, `.github/workflows/rework-ci.yml` (läuft grün auf leerem Projekt), `test_web_assets.py` um `rework/` erweitert (additiv, Secret-Scan) | `cd rework && npm ci && npm run ci && npm run typecheck && npm test && npm run build` lokal grün; rework-CI grün; `uv run pytest` grün; Hook-Test: unformatierte Datei in `rework/` stagen → `git commit` fixt bzw. bricht sauber ab |
+| **0 — Setup** | `rework/package.json` (inkl. `@biomejs/biome`, `husky`, `lint-staged`, `"prepare": "husky"`, lint-staged-Config), `rework/.nvmrc`, `tsconfig.json`, `vite.config.ts`, `vitest.config.ts`, `biome.json`, Root-`.husky/pre-commit` + `.husky/pre-push` (`cd rework && npx husky init`), Root-`.gitignore` (additiv: `node_modules/`, `.husky/_`), leere `rework/src/`-Struktur, `rework/scripts/check-secrets.mjs` + `"check:secrets"`-Script, `.github/workflows/rework-ci.yml` (läuft grün auf leerem Projekt) — **`app/` und `web/` werden in Phase 0 nicht angefasst** | `cd rework && npm ci && npm run ci && npm run typecheck && npm test && npm run build` lokal grün; rework-CI grün inkl. `check:secrets`; `uv run pytest` unverändert grün; Hook-Test: unformatierte Datei in `rework/` stagen → `git commit` fixt bzw. bricht sauber ab |
 | **1 — lib + Tests** | `rework/src/lib/*` (pkce, track-id, scan-guard, errors, tokens, redirect, storage, config) + alle Unit-Tests | 100 % der lib-Tests grün; `tsc --noEmit` sauber |
 | **2 — adapters + stores** | `rework/src/adapters/*`, `rework/src/state/*` + Store-Tests mit gemockten Adaptern | Store-Tests grün (Player-Queue, Fehler-Mapping, Scanner-Guard, Auth-Flow) |
 | **3 — Komponenten + Views** | `rework/src/components/*`, `app.tsx`, `main.tsx`, `index.html`, CSS-Migration (`global.css` + Module), Parity-Checkliste §10 abarbeiten | `npm run build` produziert `rework/dist/`; App rendert alle Zustände; Parity-Checkliste vollständig |
 | **4 — PWA** | `rework/public/` (Manifest, Icons), `rework/src/sw.ts` (injectManifest), SW-Registrierung, CSP-Verifizierung im gebauten `dist/index.html` | SW precachet Build-Assets; Flugmodus-Test: Shell lädt offline; `?code=`-Navigation landet nie im Cache |
 | **5 — Doku + rework-CI finalisieren** | `rework/README.md`, `AGENTS.md` Commands (`cd rework && npm …`), diese Datei Status; `rework-ci.yml` auf finalen Stand | rework-CI grün; Doku aktuell |
 | **6 — Smoke lokal (rework)** | Manueller Smoke-Test Spec §10.1–6 gegen `vite preview --port 8080` (TLS via mkcert, §4) bzw. `npm run dev` — **ohne Pages**, `web/` bleibt live | Spec §10.1–6 bestanden |
-| **7 — Cutover (nur nach ausdrücklicher Freigabe durch Andreas!)** | `config.py`/`serve.py` auf `rework/dist` umstellen, `test_serve.py` anpassen (Fixture), `pages.yml` umbauen (`setup-node` → `HUSKY=0 npm ci` in `rework` → build → `path: ./rework/dist`), `web/` löschen, `web/README.md` durch Verweis ersetzen, Pages-Smoke Spec §10.7–8 inkl. iOS-Safari | Spec §10 vollständig bestanden auf Pages; `web/` entfernt; `uv run pytest` grün; Pages deployt `rework/dist` |
+| **7 — Cutover (nur nach ausdrücklicher Freigabe durch Andreas!)** | `pages.yml` umbauen (`setup-node` → `HUSKY=0 npm ci` in `rework` → build → `path: ./rework/dist`), `web/` löschen, `web/README.md` durch Verweis ersetzen, Pages-Smoke Spec §10.7–8 inkl. iOS-Safari. Python nur nach Variante A (§4): eine Zeile `WEB_DIR` in `config.py` + `test_serve.py`-Fixture — oder Variante B: gar keine Python-Änderung, `serve` streichen | Spec §10 vollständig bestanden auf Pages; Pages deployt `rework/dist`; `web/` entfernt; `uv run pytest` grün |
 
 ## 10. Parity-Checkliste (aus `web/README.md` „Umsetzungsstand" + Spec)
 
@@ -418,7 +436,7 @@ ausgeführt.
 | Zwei Apps parallel: Pages und `zeitklang serve` liefern bis Cutover die alte App | `pages.yml` und `serve.py` bleiben bis Phase 7 unverändert; Cutover erst nach ausdrücklicher Freigabe; rework-CI läuft unabhängig auf `rework/**` |
 | Husky-Hooks im Repo-Root könnten versehentlich `web/` anfassen | lint-staged-Glob scoped auf `rework/**/*`; pre-commit/pre-push rufen nur `npm --prefix rework …` auf (§6.2) |
 | `crypto.subtle` in Tests | Node ≥ 20 stellt `crypto` global bereit; happy-dom-Umgebung übernimmt das |
-| Secret-Scan in `test_web_assets.py` wird durch `node_modules` langsam/falsch | `node_modules/` von `rglob` ausschließen; `rework/` wird mitgescannt (gebauter Output in `rework/dist` darf das Secret erst recht nicht enthalten) |
+| Client Secret landet versehentlich in `rework/` (src oder Build-Output) | Secret-Scan läuft Python-frei in `rework-ci.yml` (`npm run check:secrets` scannt `rework/src` + `rework/dist`, exkl. `node_modules/`); lokal liest das Script `../.env`, im CI das Actions-Secret |
 | Verhaltensverlust beim Umzug (die Issue-Kommentare dokumentieren viele Detailentscheidungen) | Parity-Checkliste §10; Issue-Kommentare werden mit in die neuen Dateien übernommen; manueller Smoke-Test vor Merge |
 
 ## 13. Offene Punkte (bei Umsetzung zu klären)
@@ -430,3 +448,6 @@ ausgeführt.
 4. Ordnername `rework/` ist bestätigt; Husky-Hooks liegen zwingend im Repo-Root
    (git-Hooks), sind aber per lint-staged-Glob und `npm --prefix rework` auf die
    neue App beschränkt (§6.2).
+5. Cutover-Variante für `zeitklang serve`: A (eine Zeile `WEB_DIR` in `config.py`,
+   `serve` bleibt) oder B (gar keine Python-Änderung, `serve` streichen, lokal
+   `vite preview`) — Entscheidung bei Phase 7 (§4).
