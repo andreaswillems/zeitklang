@@ -12,6 +12,9 @@ const KEYS = {
     refresh: "zeitklang_refresh",
     verifier: "zeitklang_verifier",
     state: "zeitklang_state",
+    // Logout-Flag: nächster Login erzwingt show_dialog=true (sonst leitet
+    // Spotys serverseitiger Consent-Cache ohne Dialog sofort zurück).
+    forceConsent: "zeitklang_force_consent",
 };
 
 const loginSection = document.getElementById("login");
@@ -134,9 +137,12 @@ async function login(forceConsent = false) {
         code_challenge: await pkceChallenge(verifier),
         state,
     });
-    if (forceConsent) {
+    if (forceConsent || localStorage.getItem(KEYS.forceConsent) === "1") {
         // Erzwingt den Spotify-Consent-Dialog: Refresh-Tokens behalten die
         // einmal gewährten Scopes — nur ein neuer Dialog kann sie ändern.
+        // Nach einem Logout gesetzt: Ohne show_dialog würde Spotys
+        // serverseitiger Consent-Cache den Redirect sofort zurückschicken
+        // und der Login wäre ein stilles Re-Login ohne Zustimmung.
         params.set("show_dialog", "true");
     }
     location.href = `${AUTHORIZE_URL}?${params}`;
@@ -197,6 +203,10 @@ async function handleRedirect() {
         client_id: SPOTIFY_CLIENT_ID,
         code_verifier: verifier,
     });
+    // Erst nach erfolgreichem Token-Tausch das Logout-Flag zurücksetzen —
+    // bei abgebrochenem Dialog (access_denied) soll der nächste Login den
+    // Zustimmungsdialog wieder erzwingen.
+    localStorage.removeItem(KEYS.forceConsent);
 }
 
 // §3.5: gültiges Access-Token → startklar; abgelaufen + Refresh-Token →
@@ -237,6 +247,10 @@ function logout() {
     // Endpoint — lokal verwerfen ist der einzige echte Logout. Auto-Login
     // greift danach erst nach erneuter Zustimmung (Spec §3.6).
     localStorage.removeItem(KEYS.refresh);
+    // Logout-Flag: Der nächste Login sendet show_dialog=true, damit Spotify
+    // den Zustimmungsdialog erneut zeigt — sonst würde der serverseitige
+    // Consent-Cache ohne Dialog sofort zurückleiten (kein echter Logout).
+    localStorage.setItem(KEYS.forceConsent, "1");
     accessToken = null;
     window.deviceId = null;
     window.player?.disconnect();

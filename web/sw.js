@@ -10,7 +10,7 @@
 // sonst bleibt der alte Stand im Cache hängen (Cleanup in activate
 // entsorgt die alten Versionen).
 
-const CACHE_VERSION = "v11"; // Logout löscht auch den Refresh-Token in app.js (echter Logout statt Session-Reset) — Version bumped (#17-Regel)
+const CACHE_VERSION = "v12"; // Logout-Flag forceConsent: nächster Login mit show_dialog=true (Spotify-Consent-Cache) — Version bumped (#17-Regel)
 const CACHE_NAME = "zeitklang-" + CACHE_VERSION;
 
 const SHELL_URLS = [

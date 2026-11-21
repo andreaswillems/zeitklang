@@ -72,7 +72,13 @@ Flow und darf nicht an den Browser weitergereicht werden.
    serverseitigen Revoke-Endpoint, das lokale Verwerfen ist der einzige echte
    Logout; Auto-Login greift danach erst nach erneuter Zustimmung (Spotify
    rotiert Refresh-Tokens bei jedem Refresh ohnehin). Ein ungültiger Refresh
-   Token (HTTP 400) wird beim Laden verworfen.
+   Token (HTTP 400) wird beim Laden verworfen. Zusätzlich setzt der Logout ein
+   Flag (`zeitklang_force_consent` in localStorage): Der nächste Login sendet
+   `show_dialog=true`, damit Spotify den Zustimmungsdialog erneut zeigt — ohne
+   dieses Flag würde Spotys serverseitiger Consent-Cache den Authorize-Redirect
+   sofort mit neuem Code beantworten und der Login wäre ein stilles Re-Login.
+   Das Flag wird erst nach erfolgreichem Token-Tausch gelöscht (bei
+   `access_denied` bleibt es gesetzt).
 
 ## 4. QR-Scan (b)
 
