@@ -10,7 +10,7 @@
 // sonst bleibt der alte Stand im Cache hängen (Cleanup in activate
 // entsorgt die alten Versionen).
 
-const CACHE_VERSION = "v7"; // CSP: frame-src für SDK-iframe (#92): Version bumped (#17-Regel)
+const CACHE_VERSION = "v8"; // „App teilen“ (#94): qrcode-generator precacht — Version bumped (#17-Regel)
 const CACHE_NAME = "zeitklang-" + CACHE_VERSION;
 
 const SHELL_URLS = [
@@ -25,6 +25,7 @@ const SHELL_URLS = [
     "./icons/icon-512.png",
     "./icons/icon-maskable-512.png",
     "./vendor/html5-qrcode.min.js",
+    "./vendor/qrcode-generator.js",
 ];
 
 self.addEventListener("install", (event) => {

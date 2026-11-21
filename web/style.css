@@ -1133,3 +1133,170 @@ body:has(#login:not([hidden])) header h1 {
     height: 20px;
     fill: currentColor;
 }
+
+/* ---------- #94: „App teilen“ — QR-Dialog mit der App-URL ---------- */
+
+/* Zweiter Ghost-Button im Login unter dem Install-Button (#18-Muster),
+   aber immer sichtbar — Teilen hängt nicht am Install-Status des Browsers.
+   Maße wie #install-login (Tap-Ziel nach #56), QR-Icon aus #62. */
+#share-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: min(398px, calc(100vw - 32px));
+    min-height: 52px; /* Tap-Ziel (#56) */
+}
+
+#share-login svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+/* „App teilen“ in der Guide-Karte (#70) — dieselbe #49-Falle wie
+   #install-scan (#18): Die Overlay-Regel #reader-wrap button (1 ID +
+   Element, s.o. bei #45) greift auch für diesen Button; der 2-ID-Selektor
+   schlägt sie sicher und überschreibt JEDE geteilte Property (position,
+   top, left, right, bottom, z-index, display, width, height, padding,
+   border-radius, color, background, border, backdrop-filter).
+   pointer-events: auto, weil #guide als Ganzes pointer-events: none hat
+   (#70); Sichtbarkeit folgt allein der Guide-Karte (nur bei gestopptem
+   Scanner, :has() aus #47/#70). */
+#reader-wrap #share-scan {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    z-index: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    align-self: center;
+    width: fit-content;
+    height: auto;
+    margin-top: 4px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    pointer-events: auto;
+}
+
+#reader-wrap #share-scan svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+/* Abgedunkelter Hintergrund wie #sheet-backdrop (#37), aber eigene
+   z-Ordnung ÜBER allen bestehenden Schichten (Leiste/#start 10,
+   Sheet-Backdrop 15, Sheet 20): Der QR-Dialog ist modal, ein Tap aufs
+   Backdrop schließt (app.js). Gleichzeitig offen mit dem Player-Sheet ist
+   konstruktiv ausgeschlossen (die „App teilen“-Buttons sind nur bei
+   gestopptem Scanner sichtbar, das Sheet öffnet nur über die dann
+   unsichtbare Mini-Player-Leiste). [hidden] greift global mit !important
+   (s.o.). */
+#share-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 25;
+}
+
+/* Zentrierte Dialog-Karte (Andreas-Entscheidung: Muster der #login-error-
+   Karte aus #58, kein Bottom-Sheet). Zentrierung per inset: 0 + margin:
+   auto statt transform (Muster #45/#47/#56) — height: fit-content macht
+   die Auto-Margins wirksam, max-height + overflow-y schützen kleine
+   Viewports. Breite wie Mini-Player-Leiste/#login-error, Optik wie das
+   Player-Sheet (#37); die view-in-Animation (section:not([hidden])) liefert
+   ein dezentes Einblenden — ohne transform-Positionierung überlagert sie
+   hier nichts (anders als beim Sheet in #37). */
+#share-dialog:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(398px, calc(100vw - 32px));
+    height: fit-content;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    padding: 16px;
+    background: rgba(18, 18, 22, 0.92);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
+    z-index: 26;
+}
+
+/* Titelzeile: Guide-Titel-Muster (#70), Seiten-Polster hält den Text
+   neben dem absolut positionierten Schließen-Button frei. */
+.share-title {
+    margin: 0;
+    padding: 8px 44px 0 8px;
+    align-self: stretch;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+}
+
+/* QR-Canvas: app.js füllt den hellen Grund und zeichnet die Module dunkel
+   (8 px pro Modul + 4-Modul-Ruhezone). CSS belässt die native Bitmap-
+   Größe, nur auf kleinen Viewports schrumpft max-width proportional
+   (height: auto hält das Seitenverhältnis). */
+#share-qr {
+    border-radius: 12px;
+    max-width: 100%;
+    height: auto;
+}
+
+/* URL als Text unter dem QR-Code — abtippbar als Fallback, wenn die
+   Kamera des Gegenüber gerade nicht mitspielt. */
+#share-url {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    text-align: center;
+    word-break: break-all;
+}
+
+/* Schließen oben rechts in der Karte — Muster #logout (runder Icon-Button),
+   44 px Tap-Ziel (#45). Position: absolute bezieht sich auf die ge-
+   schrumpte Dialog-Box (inset: 0 + margin: auto verkleinern nur die
+   Box, nicht den Anker). */
+#share-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border);
+}
+
+#share-close:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+#share-close svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
