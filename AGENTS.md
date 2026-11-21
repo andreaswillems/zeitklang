@@ -56,7 +56,18 @@ uv run pytest                                   # Run tests
 uv run ruff check && uv run ruff format         # Lint & format
 uv sync                                         # Sync dependencies from uv.lock
 uv add <package>                                # Add a dependency
+
+# Epiq (git-natives Issue-Board, siehe Abschnitt unten):
+epiq                                            # Epiq-TUI im Repo starten (Board, Sync mit :sync)
+epiq gui                                        # Browser-UI fürs Board
 ```
+
+## Epiq — Issue-Tracking ([epiq.sh](https://epiq.sh), github.com/ljtn/epiq)
+
+- Git-nativer, local-first Issue-Tracker: State lebt als append-only Event-Log auf der dedizierten Branch `__epiq_state__` (auf origin gepusht, Worktree unter `~/.epiq-global/worktrees/<id>/`). Im Repo initialisiert via `.epiq/project.json`; `.epiq/events/` und `.epiq/log/` sind gitignored. Die State-Branch nie manuell anfassen.
+- Installation: `npm install --global epiq` (liefert `epiq` und `epiq-mcp`). Rechner-Konfig in `~/.epiq-global/config.json`.
+- Nutzung: `epiq` (TUI), `epiq gui` (Browser). Agents arbeiten über den in Vibe registrierten MCP-Server `epiq` (`vibe mcp add epiq --transport stdio --command /opt/homebrew/bin/epiq-mcp`), Tools erscheinen als `mcp_epiq.epiq_*`; Sync bei MCP nie automatisch, sondern explizit `epiq_sync`. Workflow-Regeln für Agents: Skill `.vibe/skills/epiq/SKILL.md` (bei Ticket-Arbeit laden).
+- Commits mit einer `Epiq-Ref: <ticket-ref>`-Zeile im Commit-Body mit Tickets verknüpfen (ref ist die 7-stellige Ticket-ID).
 
 ## Spotify Client (`zeitklang.spotify_client`)
 
