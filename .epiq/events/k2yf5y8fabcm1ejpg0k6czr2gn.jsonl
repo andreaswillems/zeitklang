@@ -1,0 +1,5 @@
+{"v":1,"id":["01M7YZQRYX83J0Z9J7SQH3ER76","01M7YZGPPSPC8VV2VAZ24PQQ56"],"create.contributor":{"id":"K2YF5Y8FABCM1EJPG0K6CZR2GN","name":"vibe/andreaswillems"}}
+{"v":1,"id":["01M7YZRK7B311YEVYV2B97QGS7","01M7YZQRYX83J0Z9J7SQH3ER76"],"add.issue":{"id":"01M7YZRK79426K6CWAVRDDYV7D","parent":"01M7YZGPPE6XBPH2027BSWMTBW","name":"Epiq-Board für zeitklang eingerichtet","rank":"7fffffffffffffffffffffff"}}
+{"v":1,"id":["01M7YZRK7C7JW7X1M0W0K3TJNM","01M7YZRK7B311YEVYV2B97QGS7"],"edit.description":{"id":"01M7YZRK79426K6CWAVRDDYV7D","md":"epiq.sh (git-nativer, local-first Issue-Tracker) ist in diesem Repo initialisiert: `.epiq/project.json`, State-Branch `__epiq_state__` auf origin. MCP-Server `epiq` in Vibe registriert (Tools `mcp_epiq.epiq_*`), Agent-Skill in `.vibe/skills/epiq/SKILL.md`, Doku in `AGENTS.md`. Commits per `Epiq-Ref: <ref>` verknüpfen."}}
+{"v":1,"id":["01M7YZRK7D4K3DPZJ436418BXP","01M7YZRK7C7JW7X1M0W0K3TJNM"],"create.tag":{"id":"01M7YZRK7A7MAF774RQQH8HPR2","name":"meta"}}
+{"v":1,"id":["01M7YZRK7E11CPF9BY1G5ZZE04","01M7YZRK7D4K3DPZJ436418BXP"],"add.issue.tag":{"id":"01M7YZRK79426K6CWAVRDDYV7D","tag":"01M7YZRK7A7MAF774RQQH8HPR2"}}
