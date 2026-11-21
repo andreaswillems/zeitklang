@@ -5,5 +5,5 @@ import { App } from "./app.tsx";
 // App-Shell (View-Switch, Header, Statuszeile) + SW-Registrierung folgen in Phase 3/4.
 const root = document.getElementById("app");
 if (root) {
-    render(<App />, root);
+  render(<App />, root);
 }

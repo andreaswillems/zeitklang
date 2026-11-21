@@ -6,10 +6,10 @@
 declare let self: ServiceWorkerGlobalScope;
 
 declare global {
-    interface ServiceWorkerGlobalScope {
-        // Injektionspunkt — vite-plugin-pwa ersetzt diesen Ausdruck beim Build.
-        __WB_MANIFEST: Array<string | { url: string; revision: string | null }>;
-    }
+  interface ServiceWorkerGlobalScope {
+    // Injektionspunkt — vite-plugin-pwa ersetzt diesen Ausdruck beim Build.
+    __WB_MANIFEST: Array<string | { url: string; revision: string | null }>;
+  }
 }
 
 const precacheManifest = self.__WB_MANIFEST;

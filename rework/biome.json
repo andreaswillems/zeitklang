@@ -1,38 +1,38 @@
 {
-    "$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
-    "root": true,
-    "vcs": {
-        "clientKind": "git",
-        "useIgnoreFile": true
-    },
+  "$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
+  "root": true,
+  "vcs": {
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 90
+  },
+  "javascript": {
     "formatter": {
-        "enabled": true,
-        "indentStyle": "space",
-        "indentWidth": 4,
-        "lineWidth": 90
-    },
-    "javascript": {
-        "formatter": {
-            "quoteStyle": "double",
-            "semicolons": "always",
-            "trailingCommas": "all"
-        }
-    },
-    "linter": {
-        "enabled": true,
-        "rules": {
-            "preset": "recommended"
-        }
-    },
-    "assist": {
-        "enabled": true,
-        "actions": {
-            "source": {
-                "organizeImports": "on"
-            }
-        }
-    },
-    "files": {
-        "includes": ["src/**", "vite.config.ts", "vitest.config.ts", "package.json"]
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all"
     }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "files": {
+    "includes": ["src/**", "vite.config.ts", "vitest.config.ts", "package.json"]
+  }
 }

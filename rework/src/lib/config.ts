@@ -20,7 +20,7 @@ export const LOCAL_REDIRECT_URI = "https://127.0.0.1:8080/callback";
  * sonst (GitHub Pages) → Site-Root.
  */
 export function redirectUriForHost(hostname: string): string {
-    return hostname === "127.0.0.1" || hostname === "localhost"
-        ? LOCAL_REDIRECT_URI
-        : PAGES_REDIRECT_URI;
+  return hostname === "127.0.0.1" || hostname === "localhost"
+    ? LOCAL_REDIRECT_URI
+    : PAGES_REDIRECT_URI;
 }

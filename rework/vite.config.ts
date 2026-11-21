@@ -12,34 +12,34 @@ const keyPath = `${repoRoot}.cache/serve-127.0.0.1-key.pem`;
 // TLS für `vite preview` via mkcert (analog serve.py ensure_cert, docs/pwa-rebuild.md §4):
 // nur aktiv, wenn die Zertifikate lokal existieren — sonst plain HTTP (undefined).
 const https =
-    existsSync(certPath) && existsSync(keyPath)
-        ? { cert: readFileSync(certPath), key: readFileSync(keyPath) }
-        : undefined;
+  existsSync(certPath) && existsSync(keyPath)
+    ? { cert: readFileSync(certPath), key: readFileSync(keyPath) }
+    : undefined;
 
 export default defineConfig({
-    // base './' — alle Asset-URLs relativ (Pages-Base-Pfad /zeitklang/, Spec §11).
-    base: "./",
-    build: {
-        outDir: "dist",
-        // CSP: keine Inline-/data-URL-Assets (§7).
-        assetsInlineLimit: 0,
-    },
-    plugins: [
-        preact(),
-        VitePWA({
-            strategies: "injectManifest",
-            srcDir: "src",
-            filename: "sw.ts",
-            registerType: "autoUpdate",
-            // Manifest + Icons liegen unverändert in public/ (Phase 4).
-            manifest: false,
-            includeAssets: ["manifest.webmanifest", "icon.png", "icons/**/*"],
-            injectManifest: {
-                globPatterns: ["**/*.{js,css,html,png,webmanifest}"],
-            },
-        }),
-    ],
-    preview: {
-        https,
-    },
+  // base './' — alle Asset-URLs relativ (Pages-Base-Pfad /zeitklang/, Spec §11).
+  base: "./",
+  build: {
+    outDir: "dist",
+    // CSP: keine Inline-/data-URL-Assets (§7).
+    assetsInlineLimit: 0,
+  },
+  plugins: [
+    preact(),
+    VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
+      registerType: "autoUpdate",
+      // Manifest + Icons liegen unverändert in public/ (Phase 4).
+      manifest: false,
+      includeAssets: ["manifest.webmanifest", "icon.png", "icons/**/*"],
+      injectManifest: {
+        globPatterns: ["**/*.{js,css,html,png,webmanifest}"],
+      },
+    }),
+  ],
+  preview: {
+    https,
+  },
 });

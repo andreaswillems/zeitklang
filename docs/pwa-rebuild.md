@@ -275,9 +275,9 @@ Biome ersetzt ESLint **und** Prettier mit einem Tool — ein Binary, ein
 Config-File, schnell genug für jeden CI-Lauf:
 
 - **`biome.json`** (in `rework/`):
-  - Formatter: 4 Spaces, `lineWidth: 90`, doppelte Quotes, Semikolons,
-    Trailing Commas — exakt der bisherige Stil in `app.js`, damit der Diff beim
-    Migrieren klein bleibt.
+  - Formatter: 2 Spaces, `lineWidth: 90`, doppelte Quotes, Semikolons,
+    Trailing Commas — Override durch Andreas (Nov. 2026): `app.js` nutzt 4
+    Spaces, `rework/` ab Phase 1a konsequent 2 Spaces.
   - Linter: `rules.recommended` (enthält u. a. a11y-Regeln wie `useAltText` —
     passend zur PWA mit ihren Icon-Buttons und aria-labels).
   - Assist: `source.organizeImports: "on"` (Import-Sortierung bei `check --write`).
@@ -457,8 +457,8 @@ ausgeführt.
    Projekt klein (§6.2).
 6. **Kein PR-Preview-Deploy:** Phase 6 ist rein lokaler Smoke gegen
    `vite preview --port 8080`; Pages-Smoke erst nach dem Cutover in Phase 7 (§9).
-7. Biome-Config: 4 Spaces, doppelte Quotes, `lineWidth: 90` — exakt der bisherige
-   Stil in `app.js` (§6.1), damit der Diff beim Migrieren klein bleibt.
+7. Biome-Config: 2 Spaces, doppelte Quotes, `lineWidth: 90` — Override durch
+   Andreas (Nov. 2026): `app.js` hat 4 Spaces, `rework/` nutzt 2 Spaces (§6.1).
 8. State: `@preact/signals` global in den Stores, Komponenten lesen Signals direkt
    (kein Prop-Drilling) — nicht Preact-eigenes `useState` für globalen State.
 9. `qrcode-generator` hat offizielle Typen (`@types/qrcode-generator`); html5-qrcode bringt eigene Typen mit.

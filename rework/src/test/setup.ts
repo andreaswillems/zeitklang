@@ -4,5 +4,5 @@ import { afterEach } from "vitest";
 
 // Cleanup nach jedem Component-Test (§6).
 afterEach(() => {
-    cleanup();
+  cleanup();
 });

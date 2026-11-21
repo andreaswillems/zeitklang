@@ -11,9 +11,9 @@
  * (localStorage/sessionStorage) erfüllt dieses Interface strukturell.
  */
 export interface Storage {
-    getItem(key: string): string | null;
-    setItem(key: string, value: string): void;
-    removeItem(key: string): void;
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
 }
 
 /**
@@ -24,11 +24,11 @@ export interface Storage {
  * stattdessen eine InMemoryStorage hängen können.
  */
 export function webStorage(backend: Storage): Storage {
-    return {
-        getItem: (key) => backend.getItem(key),
-        setItem: (key, value) => backend.setItem(key, value),
-        removeItem: (key) => backend.removeItem(key),
-    };
+  return {
+    getItem: (key) => backend.getItem(key),
+    setItem: (key, value) => backend.setItem(key, value),
+    removeItem: (key) => backend.removeItem(key),
+  };
 }
 
 /**
@@ -36,22 +36,22 @@ export function webStorage(backend: Storage): Storage {
  * fehlende Keys liefern null, removeItem auf fehlendem Key wirft nicht.
  */
 export class InMemoryStorage implements Storage {
-    private readonly data = new Map<string, string>();
+  private readonly data = new Map<string, string>();
 
-    getItem(key: string): string | null {
-        return this.data.get(key) ?? null;
-    }
+  getItem(key: string): string | null {
+    return this.data.get(key) ?? null;
+  }
 
-    setItem(key: string, value: string): void {
-        this.data.set(key, value);
-    }
+  setItem(key: string, value: string): void {
+    this.data.set(key, value);
+  }
 
-    removeItem(key: string): void {
-        this.data.delete(key);
-    }
+  removeItem(key: string): void {
+    this.data.delete(key);
+  }
 
-    /** Wie DOM-Storage.clear() — praktisch für Test-Isolation. */
-    clear(): void {
-        this.data.clear();
-    }
+  /** Wie DOM-Storage.clear() — praktisch für Test-Isolation. */
+  clear(): void {
+    this.data.clear();
+  }
 }
