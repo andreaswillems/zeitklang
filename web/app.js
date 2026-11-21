@@ -233,8 +233,10 @@ function logout() {
     if (scannerActive) stopScan();
     sessionStorage.removeItem(KEYS.access);
     sessionStorage.removeItem(KEYS.expiresAt);
-    // Refresh-Token bleibt: Spotify stellt ihn nur bei neuer Zustimmung aus —
-    // löschen würde das Auto-Login dauerhaft brechen (Spec §3.6).
+    // Refresh-Token mitlöschen: Spotify hat keinen serverseitigen Revoke-
+    // Endpoint — lokal verwerfen ist der einzige echte Logout. Auto-Login
+    // greift danach erst nach erneuter Zustimmung (Spec §3.6).
+    localStorage.removeItem(KEYS.refresh);
     accessToken = null;
     window.deviceId = null;
     window.player?.disconnect();

@@ -67,10 +67,12 @@ Flow und darf nicht an den Browser weitergereicht werden.
    `localStorage` (siehe shortcut §8).
 5. Beim Laden: gültiges Access Token → startklar; abgelaufen + Refresh Token vorhanden
    → `grant_type=refresh_token`; sonst Login-Button.
-6. Logout löscht den Access Token (Session auf diesem Gerät) und ruft
-   `player.disconnect()`; der Refresh Token bleibt gespeichert — Spotify stellt ihn
-   nur bei neuer Zustimmung aus, Löschen würde das Auto-Login dauerhaft brechen.
-   Ein ungültiger Refresh Token (HTTP 400) wird beim Laden verworfen.
+6. Logout löscht Access Token (sessionStorage) **und Refresh Token**
+   (localStorage) und ruft `player.disconnect()` — Spotify hat keinen
+   serverseitigen Revoke-Endpoint, das lokale Verwerfen ist der einzige echte
+   Logout; Auto-Login greift danach erst nach erneuter Zustimmung (Spotify
+   rotiert Refresh-Tokens bei jedem Refresh ohnehin). Ein ungültiger Refresh
+   Token (HTTP 400) wird beim Laden verworfen.
 
 ## 4. QR-Scan (b)
 
