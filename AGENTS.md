@@ -57,6 +57,13 @@ uv run ruff check && uv run ruff format         # Lint & format
 uv sync                                         # Sync dependencies from uv.lock
 uv add <package>                                # Add a dependency
 
+# PWA-Rebuild in rework/ (Parallelbetrieb — web/ bleibt bis Phase 7 live, siehe docs/pwa-rebuild.md):
+cd rework && npm ci                             # frische Installation aus package-lock.json (installiert auch die Husky-Hooks)
+cd rework && npm run ci && npm run typecheck && npm test && npm run build && npm run check:secrets
+                                                  # komplette lokale Prüfung (Biome, tsc, Vitest, Build, Secret-Scan) — identisch zur rework-CI
+cd rework && npm run dev                        # Dev-Server Port 5173 (UI-Dev ohne Login)
+npx vite preview --port 8080                   # gebaute App auf dem OAuth-Port 8080 (TLS via mkcert, falls .cache/serve-127.0.0.1.pem existiert)
+
 # Epiq (git-natives Issue-Board, siehe Abschnitt unten):
 epiq                                            # Epiq-TUI im Repo starten (Board, Sync mit :sync)
 epiq gui                                        # Browser-UI fürs Board

@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+# Nur rework/ — die alte App in web/ wird nicht angefasst (docs/pwa-rebuild.md §6.2).
+npm --prefix rework exec lint-staged   # Biome check --write auf staged rework-Files
+npm --prefix rework run typecheck      # tsc --noEmit — Projekt ist klein, < 5 s

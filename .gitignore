@@ -28,3 +28,7 @@ output/
 # [epiq]: local hydrated state is never committed
 .epiq/events/
 .epiq/log/
+
+# Node / PWA-Rebuild in rework/ (docs/pwa-rebuild.md §4)
+node_modules/
+.husky/_
