@@ -91,6 +91,13 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                 <span>App installieren</span>
             </button>
+            <!-- #94: „App teilen“ — immer sichtbar, anders als der Install-Button
+                 hängt das Teilen nicht am Install-Status des Browsers. Tap
+                 öffnet den QR-Dialog (s.u.); QR-Icon aus #62. -->
+            <button id="share-login" class="ghost">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5,6.5v3h-3v-3H9.5 M11,5H5v6h6V5L11,5z M9.5,14.5v3h-3v-3H9.5 M11,13H5v6h6V13L11,13z M17.5,6.5v3h-3v-3H17.5 M19,5h-6v6 h6V5L19,5z M13,13h1.5v1.5H13V13z M14.5,14.5H16V16h-1.5V14.5z M16,13h1.5v1.5H16V13z M13,16h1.5v1.5H13V16z M14.5,17.5H16V19h-1.5 V17.5z M16,16h1.5v1.5H16V16z M17.5,14.5H19V16h-1.5V14.5z M17.5,17.5H19V19h-1.5V17.5z M22,7h-2V4h-3V2h5V7z M22,22v-5h-2v3h-3v2 H22z M2,22h5v-2H4v-3H2V22z M2,2v5h2V4h3V2H2z"/></svg>
+                <span>App teilen</span>
+            </button>
         </section>
         <!-- Seite 2: Scan (§6.2) -->
         <section id="scan" hidden>
@@ -159,6 +166,15 @@
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                             <span>App installieren</span>
                         </button>
+                        <!-- #94: „App teilen“ in der Guide-Karte — derselbe QR-Dialog
+                             wie im Login. Sichtbarkeit folgt allein der Guide-Karte
+                             (nur bei gestopptem Scanner, :has()); #49-Falle: der
+                             2-ID-Selektor in style.css schlägt die Overlay-Regel
+                             (Muster #install-scan, #18). -->
+                        <button id="share-scan" class="ghost">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5,6.5v3h-3v-3H9.5 M11,5H5v6h6V5L11,5z M9.5,14.5v3h-3v-3H9.5 M11,13H5v6h6V13L11,13z M17.5,6.5v3h-3v-3H17.5 M19,5h-6v6 h6V5L19,5z M13,13h1.5v1.5H13V13z M14.5,14.5H16V16h-1.5V14.5z M16,13h1.5v1.5H16V13z M13,16h1.5v1.5H13V16z M14.5,17.5H16V19h-1.5 V17.5z M16,16h1.5v1.5H16V16z M17.5,14.5H19V16h-1.5V14.5z M17.5,17.5H19V19h-1.5V17.5z M22,7h-2V4h-3V2h5V7z M22,22v-5h-2v3h-3v2 H22z M2,22h5v-2H4v-3H2V22z M2,2v5h2V4h3V2H2z"/></svg>
+                            <span>App teilen</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -210,10 +226,31 @@
                 <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
             </button>
         </div>
+        <!-- #94: QR-Dialog „App teilen“ — zentrierte Dialog-Karte über
+             abgedunkeltem Hintergrund (Andreas-Entscheidung: Muster der
+             #login-error-Karte, kein Bottom-Sheet). Ein gemeinsamer Dialog
+             für beide „App teilen“-Buttons; app.js rendert die App-URL als
+             QR-Code aufs Canvas (vendor/qrcode-generator.js) — ein anderes
+             Handy scannt ihn und landet direkt auf der App. -->
+        <div id="share-backdrop" hidden></div>
+        <section id="share-dialog" hidden role="dialog" aria-modal="true"
+                 aria-label="App teilen">
+            <button id="share-close" aria-label="Schließen">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+            <p class="share-title">App auf anderem Handy öffnen</p>
+            <canvas id="share-qr" width="328" height="328"></canvas>
+            <p id="share-url"></p>
+        </section>
         <p id="status" role="alert"></p>
     </main>
     <script src="config.js"></script>
     <script src="vendor/html5-qrcode.min.js"></script>
+    <!-- #94: QR-Generator für „App teilen“ — html5-qrcode scannt nur;
+         qrcode-generator 1.4.4 (Kazuhiko Arase, MIT) liefert die Modul-
+         Matrix fürs Canvas. Byte-genau vom offiziellen Release: Die npm-
+         Datei ist identisch mit js/qrcode.js am Tag js1.4.4 im Autor-Repo. -->
+    <script src="vendor/qrcode-generator.js"></script>
     <script src="app.js"></script>
     <!-- SDK nach app.js: ruft window.onSpotifyWebPlaybackSDKReady auf -->
     <script src="https://sdk.scdn.co/spotify-player.js"></script>

@@ -677,6 +677,82 @@ window.addEventListener("appinstalled", () => {
     deferredInstallPrompt = null;
     showInstallButtons(false);
 });
+
+// ---------- #94: App teilen — QR-Dialog mit der App-URL ----------
+
+// Zwei Ghost-Buttons (Login unter dem Install-Button, Scan in der Guide-
+// Karte; Andreas-Entscheidung per Rückfrage) öffnen denselben Dialog: eine
+// zentrierte Karte über abgedunkeltem Hintergrund, darin der QR-Code mit
+// der App-URL — ein anderes Handy scannt ihn und landet direkt auf der App.
+const shareLoginBtn = document.getElementById("share-login");
+const shareScanBtn = document.getElementById("share-scan");
+const shareDialog = document.getElementById("share-dialog");
+const shareBackdrop = document.getElementById("share-backdrop");
+const shareCloseBtn = document.getElementById("share-close");
+const shareQrCanvas = document.getElementById("share-qr");
+const shareUrlEl = document.getElementById("share-url");
+
+// App-URL = Origin + Pfad, bewusst ohne Query (?code=… aus dem OAuth-
+// Redirect bleibt draußen) — stimmt live wie auf dem Dev-Server.
+function appUrl() {
+    return location.origin + location.pathname;
+}
+
+// QR-Rendering aufs Canvas: html5-qrcode scannt nur, die Erzeugung macht
+// die vendorisierte qrcode-generator-Bibliothek (typeNumber 0 = kleinste
+// passende Version automatisch). 4-Modul-Ruhezone auf hellem Grund —
+// Scanner-Apps brauchen den Kontrast zum dunklen Theme.
+const SHARE_QR_QUIET_ZONE = 4;
+const SHARE_QR_SCALE = 8;
+
+function renderShareQr(url) {
+    const qr = qrcode(0, "M");
+    qr.addData(url);
+    qr.make();
+    const modules = qr.getModuleCount();
+    const dim = (modules + SHARE_QR_QUIET_ZONE * 2) * SHARE_QR_SCALE;
+    shareQrCanvas.width = dim;
+    shareQrCanvas.height = dim;
+    const ctx = shareQrCanvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, dim, dim);
+    ctx.fillStyle = "#0e0e0e";
+    for (let row = 0; row < modules; row++) {
+        for (let col = 0; col < modules; col++) {
+            if (qr.isDark(row, col)) {
+                ctx.fillRect(
+                    (col + SHARE_QR_QUIET_ZONE) * SHARE_QR_SCALE,
+                    (row + SHARE_QR_QUIET_ZONE) * SHARE_QR_SCALE,
+                    SHARE_QR_SCALE,
+                    SHARE_QR_SCALE,
+                );
+            }
+        }
+    }
+}
+
+function openShareDialog() {
+    const url = appUrl();
+    shareUrlEl.textContent = url;
+    renderShareQr(url);
+    shareBackdrop.hidden = false;
+    shareDialog.hidden = false;
+}
+
+function closeShareDialog() {
+    shareBackdrop.hidden = true;
+    shareDialog.hidden = true;
+}
+
+shareLoginBtn.addEventListener("click", openShareDialog);
+shareScanBtn.addEventListener("click", openShareDialog);
+shareCloseBtn.addEventListener("click", closeShareDialog);
+shareBackdrop.addEventListener("click", closeShareDialog);
+window.addEventListener("keydown", (event) => {
+    // Esc schließt den QR-Dialog — auf dem Handy sind Backdrop-Tap und
+    // X-Icon die Wege, Esc der Weg über die Desktop-Tastatur.
+    if (event.key === "Escape") closeShareDialog();
+});
 init();
 
 // ---------- QR-Scan (§4, aus dem Durchstich) ----------
@@ -697,6 +773,10 @@ async function applyTorch(on) {
 // verhindert, der Scanner läuft kontinuierlich weiter).
 async function startScan() {
     if (scannerActive) return; // #6 Stufe 2: bereits laufend — kein Neustart
+    // #94: Ein offener QR-Dialog weicht dem Scanner — das Backdrop blockt
+    // den Scannen-Button zwar ohnehin, das ist die defensive Sperre im
+    // Muster des offenen Sheets.
+    closeShareDialog();
     // #17: Offline keinen Kamera-Start wagen — die Wiedergabe bräche
     // ohnehin sofort ab. Klarer Hinweis in #result (#53-Muster),
     // #start bleibt sichtbar.
