@@ -7,8 +7,11 @@
     <!-- #78: Meta-CSP + Referrer-Policy — GitHub Pages setzt keine Security-Header,
          Meta-Tags am Head-Anfang sind die einzige Absicherung (Details: Issue #78).
          #92: frame-src für den SDK-iframe (sdk.scdn.co/embedded/index.html) —
-         ohne diese Direktive blockiert default-src 'self' die Wiedergabe-Engine. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://sdk.scdn.co; frame-src https://sdk.scdn.co; style-src 'self'; img-src 'self' https://*.scdn.co data:; connect-src 'self' https://accounts.spotify.com https://api.spotify.com https://*.spotify.com wss://*.spotify.com; media-src blob: https://*.spotify.com; worker-src blob:; object-src 'none'; base-uri 'self'; form-action 'none'">
+         ohne diese Direktive blockiert default-src 'self' die Wiedergabe-Engine.
+         worker-src braucht 'self': Service-Worker-Skripte (sw.js) werden von
+         worker-src governed — nur blob: hätte die Registrierung von sw.js
+         blockiert (Console: "blocked a worker script … violates worker-src"). -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://sdk.scdn.co; frame-src https://sdk.scdn.co; style-src 'self'; img-src 'self' https://*.scdn.co data:; connect-src 'self' https://accounts.spotify.com https://api.spotify.com https://*.spotify.com wss://*.spotify.com; media-src blob: https://*.spotify.com; worker-src blob: 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
     <meta name="referrer" content="no-referrer">
     <meta name="theme-color" content="#0e0e0e">
     <title>Zeitklang</title>
