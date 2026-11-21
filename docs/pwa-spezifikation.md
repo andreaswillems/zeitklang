@@ -148,8 +148,13 @@ SDK streamt ohne Premium nicht.
   Web-API-Play startet die Wiedergabe auf iOS ggf. pausiert. Workaround in §5.5
   (`activateElement()` beim Tap + Play/Pause-Button). Ceiling: auf iOS evtl. ein
   zusätzlicher Tap nötig; kein Upgrade nötig. SDK v1.10 meldet den Autoplay-Block
-  des Browsers als eigenes Event `autoplay_failed` (in `app.js` bewusst unbeachtet —
-  `activateElement()` beim Tap löst das, §5.5). `authentication_error` feuert zudem
+  des Browsers als eigenes Event `autoplay_failed` — in `app.js` wird darauf der
+  aktuelle State via `getCurrentState()` geholt und gerendert (Mini-Player mit
+  Play-Button) plus ein Hinweis in `#status`, damit nach grünem Scan nicht
+  „gar nichts passiert“; `activateElement()` beim Tap löst das i. d. R. (§5.5).
+  Hinweis: Safari überspringt `encrypted-media`/`autoplay` im `allow`-Attribut des
+  SDK-iframes („unsupported feature name“) — Autoplay-Delegation greift dort nicht.
+  `authentication_error` feuert zudem
   spurisch beim Connect („Invalid token scopes."), obwohl `ready` nachkommt —
   `app.js` zeigt den Hinweis deshalb erst, wenn nicht binnen 3 s `ready` folgt,
   und räumt ihn beim `ready` wieder ab.

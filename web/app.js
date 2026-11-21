@@ -261,6 +261,13 @@ const OFFLINE_MSG =
     "Keine Internetverbindung. Scannen und Wiedergabe brauchen Internet — bitte WLAN oder Mobilfunk prüfen.";
 const OFFLINE_SCAN_MSG =
     "Keine Internetverbindung — bitte wieder verbinden und erneut scannen.";
+// iOS/Safari: das allow-Attribut des SDK-iframes (encrypted-media; autoplay)
+// wird von Safari als „unsupported feature“ übersprungen, daher kann Autoplay
+// im iframe blockiert sein — das SDK meldet dann autoplay_failed, ohne dass
+// ein player_state_changed mit paused=true käme. Hinweis + State nachziehen,
+// damit der Mini-Player mit Play-Button sichtbar wird (§5.5: extra Tap).
+const AUTOPLAY_HINT_MSG =
+    "Wiedergabe wurde vom Browser blockiert — tippe auf Play, um den Song zu starten.";
 // #6 Stufe 2: Nach dem Scan bleibt die App in der Scan-Ansicht (kontinuierlicher
 // Loop, das Player-Sheet (#37) öffnet sich nur über den Mini-Player). Der frühere
 // Auto-Wechsel (awaitingTrackState) ist entfallen — ein expliziter
@@ -338,11 +345,23 @@ function createPlayer() {
     window.player.addListener("playback_error", ({ message }) => {
         statusEl.textContent = "Wiedergabe-Fehler: " + message;
     });
+    window.player.addListener("autoplay_failed", () => {
+        // Autoplay im SDK-iframe blockiert (iOS/Safari): aktuellen State holen
+        // und rendern — sonst bliebe nach grünem Scan „gar nichts sichtbar“.
+        window.player.getCurrentState().then((state) => {
+            if (state) renderPlayerState(state);
+        });
+        statusEl.textContent = AUTOPLAY_HINT_MSG;
+    });
     window.player.connect();
 }
 
 function renderPlayerState(state) {
     if (!state) return;
+    // Autoplay-Hinweis räumen, sobald tatsächlich abgespielt wird.
+    if (!state.paused && statusEl.textContent === AUTOPLAY_HINT_MSG) {
+        statusEl.textContent = "";
+    }
     const track = state.track_window.current_track;
     const artistText = track.artists.map((a) => a.name).join(", ");
     const img = track.album.images[0];
