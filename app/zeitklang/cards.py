@@ -14,6 +14,7 @@ Standard:
     uv run zeitklang cards data/songs.json output/zeitklang-karten.pdf
 """
 
+import json
 import os
 import sys
 import tempfile
@@ -62,6 +63,18 @@ def load_card_songs(json_path: Path) -> list[dict]:
     songs_with_url = [s for s in all_songs if s.get("spotify_url")]
     print(f"📚 {len(all_songs)} Songs geladen, {len(songs_with_url)} mit Spotify-URL")
     return songs_with_url
+
+
+def load_series_name(json_path: Path) -> str | None:
+    """Liest den Reihen-Namen (Metadaten-Feld 'genre'/'name') aus der Song-JSON."""
+    try:
+        with open(json_path, encoding="utf-8") as f:
+            data = json.load(f)
+    except OSError, json.JSONDecodeError:
+        return None
+    if isinstance(data, dict):
+        return data.get("genre") or data.get("name")
+    return None
 
 
 def generate_qr_code(data: str, size: int = 300) -> Image.Image:
@@ -220,9 +233,11 @@ def run(
     print(f"📄 Erstelle {num_batches} Karten-Sets ({total_pdf_pages} PDF-Seiten)...")
     print()
 
-    # PDF erstellen
+    # PDF erstellen (Titel trägt den Reihen-Namen, falls in der JSON hinterlegt)
+    series_name = load_series_name(input_file)
+    pdf_title = f"Zeitklang Karten — {series_name} Edition" if series_name else "Zeitklang Karten"
     c = canvas.Canvas(str(output_file), pagesize=A4)
-    c.setTitle("Zeitklang Karten — Metalcore Edition")
+    c.setTitle(pdf_title)
     c.setAuthor("Zeitklang")
 
     for batch_idx in range(num_batches):

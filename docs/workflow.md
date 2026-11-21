@@ -121,6 +121,31 @@ uv run zeitklang cards
 
 ---
 
+### Schritt 3b: Weitere Reihe anlegen (z. B. „90er Radio Hits")
+
+Jede Reihe bekommt eine **eigene Song-JSON** und ein **eigenes PDF** — bestehende Dateien
+(`data/songs.json`, `output/zeitklang-karten.pdf`) bleiben unberührt. Die Ausgabedatei ist
+beim Fetch-Befehl deshalb Pflicht-Parameter:
+
+```bash
+# Schritt 1 — Discogs-Prüfung + Playlist erstellen (nur Discogs, ohne Spotify-URLs):
+uv run zeitklang fetch-discogs-search data/songs-90s.json \
+    --year-start 1990 --year-end 1999 --per-year 12 --name "90er Radio Hits" --playlist-only
+
+# Schritt 2 — Spotify-URLs nachpflegen (idempotent, bei 429 einfach erneut starten):
+uv run zeitklang enrich-spotify data/songs-90s.json
+
+# Schritt 3 — eigenes Karten-PDF für diese Reihe:
+uv run zeitklang cards data/songs-90s.json output/90s-karten.pdf
+```
+
+Optional lassen sich Icon-Tracks garantieren: `--add "Nirvana - Smells Like Teen Spirit"` (Discogs-Jahr + Spotify-URL).
+
+**Ergebnis:** `data/songs-90s.json` (max. 10 Songs × 10 Jahre) und `output/90s-karten.pdf`.
+Das PDF trägt den Reihen-Namen im Titel („Zeitklang Karten — 90er Radio Hits Edition“).
+
+---
+
 ## 📁 Dateien im Projekt
 
 | Datei | Zweck |
@@ -128,10 +153,13 @@ uv run zeitklang cards
 | `app/zeitklang/auth/app.py` | Spotify Auth Webapp (Port 8080) — `zeitklang web` |
 | `web/` | Statische Assets der geplanten PWA (QR-Scanner + Player) — siehe `web/README.md` |
 | `app/zeitklang/discogs.py` | Holt Songs von Discogs + Spotify — `zeitklang fetch-discogs` |
-| `app/zeitklang/cards.py` | Erstellt druckbares QR-Code PDF — `zeitklang cards` |
+| `app/zeitklang/fetch_discogs_search.py` | Sucht Radio-Hits eines Zeitraums über Discogs-Compilations — `zeitklang fetch-discogs-search` |
+| `app/zeitklang/enrich_spotify.py` | Spotify-URLs in eine Song-JSON nachpflegen — `zeitklang enrich-spotify` |
+| `app/zeitklang/cards.py` | Erstellt druckbares QR-Code PDF — `zeitklang cards [input.json] [output.pdf]` |
 | `app/zeitklang/spotify_client.py` | Spotify API Client (Library) |
 | `app/zeitklang/songs.py` | Song-JSON laden/speichern |
-| `data/songs.json` | Song-Datenbank (116 Songs) |
+| `data/songs.json` | Song-Datenbank Metalcore (116 Songs) |
+| `data/songs-90s.json` | Reihe „90er Radio Hits" (eigene JSON pro Reihe) |
 | `output/zeitklang-karten.pdf` | Druckfertige Karten (gitignored, wird neu generiert) |
 | `app/tests/` | pytest-Tests (`uv run pytest`) |
 | `.cache/spotify-token.json` | Gespeicherter Spotify-Token |
