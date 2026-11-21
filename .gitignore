@@ -24,3 +24,7 @@ output/
 
 # macos stuff
 .DS_Store
+
+# [epiq]: local hydrated state is never committed
+.epiq/events/
+.epiq/log/
