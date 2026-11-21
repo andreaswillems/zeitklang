@@ -10,7 +10,7 @@
 // sonst bleibt der alte Stand im Cache hängen (Cleanup in activate
 // entsorgt die alten Versionen).
 
-const CACHE_VERSION = "v9"; // CSP worker-src 'self' (index.html: sw.js-Registrierung war blockiert) + autoplay_failed-Handling (app.js) — Version bumped (#17-Regel)
+const CACHE_VERSION = "v10"; // 403-Reason-Mapping (PREMIUM_REQUIRED vs. Scopes) + show_dialog-Re-Consent in app.js — Version bumped (#17-Regel)
 const CACHE_NAME = "zeitklang-" + CACHE_VERSION;
 
 const SHELL_URLS = [

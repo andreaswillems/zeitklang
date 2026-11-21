@@ -110,7 +110,7 @@ function showLoginError(message) {
     loginErrorEl.hidden = false;
 }
 
-async function login() {
+async function login(forceConsent = false) {
     // #58: Weiterleitungs-Zustand + Doppeltipp-Schutz — disabled/Flag als
     // erste Aktion, damit auch das await-Fenster bis zum Redirect (PKCE-
     // Challenge) gegen Doppeltaps geschützt ist. Zurückgesetzt wird der
@@ -134,6 +134,11 @@ async function login() {
         code_challenge: await pkceChallenge(verifier),
         state,
     });
+    if (forceConsent) {
+        // Erzwingt den Spotify-Consent-Dialog: Refresh-Tokens behalten die
+        // einmal gewährten Scopes — nur ein neuer Dialog kann sie ändern.
+        params.set("show_dialog", "true");
+    }
     location.href = `${AUTHORIZE_URL}?${params}`;
 }
 
@@ -278,6 +283,9 @@ let trackLoaded = false;
 // sondern wird zwischengespeichert und im ready-Event automatisch abgespielt.
 let queuedTrackId = null;
 let queueTimer = null;
+// Einmalig pro Seitenladung: 403 wegen fehlender Scopes → Re-Consent mit
+// show_dialog=true (sonst Endlosschleife Login → Scan → 403).
+let reconsentUsed = false;
 // #6 Stufe 2: kontinuierlicher Scanner — die Kamera bleibt zwischen den Karten
 // an; scannerActive verhindert Doppel-Starts (html5-qrcode wirft sonst).
 let scannerActive = false;
@@ -461,8 +469,39 @@ async function playTrack(trackId) {
     }
     if (response.ok) {
         statusEl.textContent = "";
+        reconsentUsed = false;
         // #6 Stufe 2: bewusst kein Ansichtswechsel — die Scan-Ansicht bleibt
         // aktiv, der Mini-Player (#7) zeigt den laufenden Song.
+        return;
+    }
+    // #10: Fachdetails (HTTP-Status, Spotify-Reason) nur in die Konsole,
+    // in der UI steht die handlungsanleitende Meldung.
+    let reason = "";
+    try {
+        const body = await response.json();
+        reason = body?.error?.reason ?? "";
+        console.error(
+            "Play fehlgeschlagen:",
+            response.status,
+            reason || body?.error?.message || "",
+        );
+    } catch {
+        console.error("Play fehlgeschlagen:", response.status);
+    }
+    if (response.status === 403 && reason === "PREMIUM_REQUIRED") {
+        // Free-Account: PUT /me/player/play antwortet mit 403 PREMIUM_REQUIRED
+        // (nicht 412) — gleiche Behandlung wie account_error (#58).
+        logout();
+        showLoginError(LOGIN_PREMIUM_MSG);
+        return;
+    }
+    if (response.status === 403 && !reconsentUsed) {
+        // Token ohne nötigen Scope: Refresh ändert die gewährten Scopes nicht,
+        // nur ein erzwungener Consent-Dialog (show_dialog=true) holt sie —
+        // einmalig pro Seitenladung, sonst Endlosschleife.
+        reconsentUsed = true;
+        logout();
+        login(true);
         return;
     }
     const messages = {
@@ -574,7 +613,7 @@ async function init() {
     }
 }
 
-loginBtn.addEventListener("click", login); // #58: Ref statt erneuter getElementById
+loginBtn.addEventListener("click", () => login()); // #58: Ref statt erneuter getElementById; Wrapper, damit das Click-Event nicht als forceConsent durchgereicht wird
 document.getElementById("logout").addEventListener("click", logout);
 // #58: „Erneut versuchen“ — einfacher Seiten-Reload (Andreas-Entscheidung):
 // handleRedirect() hat ?code/?error per replaceState aus der URL geräumt,

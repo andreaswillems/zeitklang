@@ -101,10 +101,15 @@ Flow und darf nicht an den Browser weitergereicht werden.
    deckt auf, ein neuer Play macht den Spoiler wieder zu.
 5. iOS/mobile: beim Scan-Tap `player.activateElement()` aufrufen; nach dem Transfer
    startet die Wiedergabe auf iOS ggf. pausiert → Nutzer tippt Play (§8).
-6. Fehler-Mapping (ein Fall pro Zeile): SDK `account_error` oder Web-API `412` →
-   „Spotify Premium erforderlich"; `404` → „kein aktives Gerät — SDK verbinden";
-   `403` → „fehlende Scopes — neu anmelden"; `401` → Token abgelaufen (Tokens laufen
-   nach 1 h ab) → refreshen und wiederholen.
+6. Fehler-Mapping: SDK `account_error` oder Web-API `412` → „Spotify Premium
+   erforderlich“; **`403` mit `reason: PREMIUM_REQUIRED`** → ebenfalls Premium-Meldung
+   und wie `account_error` zurück auf den Login (Free-Accounts antworten bei
+   `PUT /me/player/play` mit 403, nicht 412); sonstiges `403` → einmalig pro
+   Seitenladung Re-Consent mit `show_dialog=true` (ein Refresh-Token behält die
+   einmal gewährten Scopes); `404` → „kein aktives Gerät — SDK verbinden“;
+   `401` → Token abgelaufen (Tokens laufen nach 1 h ab) → refreshen und
+   wiederholen. HTTP-Status und Spotify-Reason gehen zusätzlich in die Konsole
+   (#10: Fachdetails nicht in der UI).
 
 Voraussetzung, die dem Nutzer angezeigt wird: **Spotify Premium** — das Web Playback
 SDK streamt ohne Premium nicht.
