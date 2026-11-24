@@ -8,6 +8,9 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  # Artifact-Cleanup-Step (github-script) loescht stale Artefakte dieses
+  # Laufs vor dem Upload — dafür braucht das Token actions-Schreibrechte.
+  actions: write
 
 concurrency:
   group: pages
