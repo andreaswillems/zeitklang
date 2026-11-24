@@ -360,34 +360,42 @@ describe("playTrack — PUT /me/player/play", () => {
     expect(local.getItem(REDIRECT_KEYS.reconsentPending)).toBeNull();
   });
 
-  it("403 ohne Premium-Reason: einmalig logout() + login(true); zweites 403 → Login-veraltet-Hinweis (F401W08)", async () => {
-    // 71TAZ1B-3: Token mit ALLEN Scopes — das zweite 403 ist dann die
-    // Stale-Epoche (F401W08), nicht ein fehlender Scope.
+  it("403 ohne Premium-Reason + alle Playback-Scopes vorhanden: Titel-Meldung statt Re-Consent — wiederholtes 403 gleiche Meldung, kein logout/login/Marker (R52EEYK)", async () => {
+    // R52EEYK (HITL): Nur ein NACHWEISLICH fehlender Playback-Scope darf die
+    // Re-Consent-Leiter auslösen. Token mit ALLEN Scopes → track-spezifischer
+    // 403 (z. B. ungültige Track-ID): Nutzer-Meldung, kein Logout/Consent.
     seedValidJwt(AUTH_SCOPES);
     scriptPlay([
-      { status: 403, body: { error: { message: "Insufficient scope" } } },
-      { status: 403, body: { error: { message: "Insufficient scope" } } },
+      {
+        status: 403,
+        body: { error: { reason: "UNKNOWN", message: "Restriction violated" } },
+      },
+      {
+        status: 403,
+        body: { error: { reason: "UNKNOWN", message: "Restriction violated" } },
+      },
     ]);
 
     await playReady("track-1");
 
-    expect(loginMock).toHaveBeenCalledExactlyOnceWith(true);
-    expect(logoutMock).toHaveBeenCalledTimes(1);
+    expect(playerMessage.value).toBe(playErrorMessage(403, "UNKNOWN"));
+    expect(loginMock).not.toHaveBeenCalled();
+    expect(logoutMock).not.toHaveBeenCalled();
     expect(setAuthErrorMock).not.toHaveBeenCalled();
+    expect(local.getItem(REDIRECT_KEYS.reconsentPending)).toBeNull();
 
     await playReady("track-2");
 
-    expect(loginMock).toHaveBeenCalledTimes(1);
-    // Parity web/app.js L514–530: beim zweiten 403 KEIN erneutes logout().
-    // F401W08: der erste Re-Consent setzt den persistenten Marker —
-    // jedes weitere 403 zeigt daher den gezielten Login-veraltet-Hinweis
-    // (bewusste HITL-freigegebene Abweichung von der Scope-Meldung).
-    expect(logoutMock).toHaveBeenCalledTimes(1);
-    expect(playerMessage.value).toBe(LOGIN_STALE_MSG);
+    expect(playerMessage.value).toBe(playErrorMessage(403, "UNKNOWN"));
+    expect(loginMock).not.toHaveBeenCalled();
+    expect(logoutMock).not.toHaveBeenCalled();
+    expect(local.getItem(REDIRECT_KEYS.reconsentPending)).toBeNull();
   });
 
   it("ok-PUT setzt reconsentUsed zurück: nach ok löst ein weiteres 403 erneut Re-Consent aus", async () => {
-    seedValidToken();
+    // R52EEYK: Leiter nur bei nachweislich fehlendem Scope — JWT ohne
+    // user-modify-playback-state, damit beide 403 den Missing-Scope-Pfad nehmen.
+    seedValidJwt("streaming");
     scriptPlay([
       { status: 403, body: { error: { message: "Insufficient scope" } } },
       { status: 200, body: {} },
@@ -558,8 +566,10 @@ describe("playTrack — PUT-Timeout (Security-Audit A10:2025, Finding F6)", () =
 });
 
 describe("Re-Consent-Marker (F401W08 — persistenter Marker bei veralteter Login-Epoche)", () => {
-  it("(a) erster else-403: Marker über die local-Storage-Dep setzen — VOR logout() + login(true) (Force-Consent-Redirect bleibt)", async () => {
-    seedValidToken();
+  it("(a) erster 403 mit fehlendem Playback-Scope: Marker über die local-Storage-Dep setzen — VOR logout() + login(true) (Force-Consent-Redirect bleibt)", async () => {
+    // R52EEYK: Leiter nur bei nachweislich fehlendem Scope —
+    // user-modify-playback-state fehlt im JWT.
+    seedValidJwt("streaming");
     const setItemSpy = vi.spyOn(local, "setItem");
     scriptPlay([
       { status: 403, body: { error: { reason: "UNKNOWN", message: "Stale epoch" } } },
@@ -618,7 +628,7 @@ describe("playTrack — 403 Scope-Logging (71TAZ1B-2; lib/token-scopes.ts; BSF4Q
   // tokenShape eines per jwtWithScp gebauten JWT: 3 Segmente, Payload-Keys ["scp"]
   const JWT_SHAPE = { segments: 3, payloadKeys: ["scp"] };
 
-  it("403 (else): aufgelöste Scopes des gültigen Access-Tokens gehen in die Konsole (Quelle JWT via Fallback — kein scope-Feld persistiert) — kein extra Refresh, Re-Consent-Pfad unverändert", async () => {
+  it("403 (else): aufgelöste Scopes des gültigen Access-Tokens gehen in die Konsole (Quelle JWT via Fallback — kein scope-Feld persistiert) — kein extra Refresh; vollständige Scopes → Titel-Meldung statt Re-Consent (R52EEYK)", async () => {
     seedValidJwt("streaming user-modify-playback-state");
     scriptPlay([
       { status: 403, body: { error: { reason: "UNKNOWN", message: "Stale epoch" } } },
@@ -638,8 +648,10 @@ describe("playTrack — 403 Scope-Logging (71TAZ1B-2; lib/token-scopes.ts; BSF4Q
       ],
     ]);
     expect(tokenCalls).toBe(0); // gültiger Token → Diagnose ohne Refresh
-    expect(logoutMock).toHaveBeenCalledExactlyOnceWith();
-    expect(loginMock).toHaveBeenCalledExactlyOnceWith(true);
+    // R52EEYK: alle Playback-Scopes vorhanden → kein Re-Consent, Titel-Meldung.
+    expect(logoutMock).not.toHaveBeenCalled();
+    expect(loginMock).not.toHaveBeenCalled();
+    expect(playerMessage.value).toBe(playErrorMessage(403, "UNKNOWN"));
   });
 
   it("403 PREMIUM_REQUIRED: Scope-Log feuert ebenfalls, dann Premium-Handling (logout + setAuthError)", async () => {
@@ -709,7 +721,7 @@ describe("playTrack — 403 Scope-Logging (71TAZ1B-2; lib/token-scopes.ts; BSF4Q
     ]);
   });
 
-  it("kein Token vorhanden (getValidToken → null): granted null (Quelle „unbekannt“, Token-Form null) in der Konsole, playTrack resolved normal (Re-Consent)", async () => {
+  it("kein Token vorhanden (getValidToken → null): granted null (Quelle „unbekannt“, Token-Form null) in der Konsole, playTrack resolved normal (R52EEYK: Titel-Meldung, kein Re-Consent bei unbekannten Scopes)", async () => {
     // weder Access- noch Refresh-Token geseeded
     scriptPlay([{ status: 403, body: { error: { reason: "UNKNOWN" } } }]);
 
@@ -719,10 +731,14 @@ describe("playTrack — 403 Scope-Logging (71TAZ1B-2; lib/token-scopes.ts; BSF4Q
       [SCOPE_LOG_LABEL, null, "Quelle:", "unbekannt", "Token-Form:", null],
     ]);
     expect(tokenCalls).toBe(0);
-    expect(loginMock).toHaveBeenCalledExactlyOnceWith(true);
+    // R52EEYK: granted null = unbekannt → konservativ Titel-Meldung, keine Leiter.
+    expect(loginMock).not.toHaveBeenCalled();
+    expect(logoutMock).not.toHaveBeenCalled();
+    expect(playerMessage.value).toBe(playErrorMessage(403, "UNKNOWN"));
+    expect(local.getItem(REDIRECT_KEYS.reconsentPending)).toBeNull();
   });
 
-  it("getValidToken wirft beim Scope-Log (Refresh-Endpunkt 500): Fehler nur Konsole, playTrack resolved weiter mit Re-Consent — keine Rejection", async () => {
+  it("getValidToken wirft beim Scope-Log (Refresh-Endpunkt 500): Fehler nur Konsole, playTrack resolved weiter mit Titel-Meldung (R52EEYK: Diagnose-Fehler = unbekannt, kein Re-Consent) — keine Rejection", async () => {
     session.setItem(TOKEN_KEYS.access, "at-valid");
     session.setItem(TOKEN_KEYS.expiresAt, String(NOW + 10_000));
     local.setItem(TOKEN_KEYS.refresh, "rt-1");
@@ -747,7 +763,10 @@ describe("playTrack — 403 Scope-Logging (71TAZ1B-2; lib/token-scopes.ts; BSF4Q
       expect.any(Error),
     );
     expect(scopeLogs()).toEqual([]); // Happy-Path-Log feuert nicht
-    expect(loginMock).toHaveBeenCalledExactlyOnceWith(true); // 403-Pfad läuft normal weiter
+    // R52EEYK: Diagnose wirft → Scopes unbekannt → Titel-Meldung, keine Leiter.
+    expect(loginMock).not.toHaveBeenCalled();
+    expect(logoutMock).not.toHaveBeenCalled();
+    expect(playerMessage.value).toBe(playErrorMessage(403, "UNKNOWN"));
   });
 });
 
@@ -909,22 +928,46 @@ describe("playTrack — 403 Quellen-Auflösung (BSF4QZM-2: scope-Feld primär, J
     );
   });
 
-  it("403 erster ohne Marker + opaker Token + vollständige persistierte Scopes → Re-Consent unverändert (Marker + logout() + login(true), kein playerMessage)", async () => {
+  it("403 erster ohne Marker + opaker Token + vollständige persistierte Scopes → Titel-Meldung, KEIN Re-Consent (R52EEYK: bekannt + vollständig)", async () => {
     seedOpaqueValidToken(AUTH_SCOPES);
     scriptPlay([{ status: 403, body: { error: { reason: "UNKNOWN" } } }]);
 
     await playReady("track-1");
 
-    expect(local.getItem(REDIRECT_KEYS.reconsentPending)).toBe("1");
-    expect(logoutMock).toHaveBeenCalledExactlyOnceWith();
-    expect(loginMock).toHaveBeenCalledExactlyOnceWith(true);
-    expect(playerMessage.value).toBeNull();
+    expect(playerMessage.value).toBe(playErrorMessage(403, "UNKNOWN"));
+    expect(local.getItem(REDIRECT_KEYS.reconsentPending)).toBeNull();
+    expect(logoutMock).not.toHaveBeenCalled();
+    expect(loginMock).not.toHaveBeenCalled();
+  });
+
+  it("403 + Scopes UNBEKANNT (opaker Token, kein scope-Feld) + Marker frei → Titel-Meldung statt Re-Consent; wiederholtes 403 gleiche Meldung, weiterhin keine Leiter (R52EEYK)", async () => {
+    seedOpaqueValidToken(); // kein scope-Feld, opak → granted null
+    scriptPlay([
+      { status: 403, body: { error: { reason: "UNKNOWN" } } },
+      { status: 403, body: { error: { reason: "UNKNOWN" } } },
+    ]);
+
+    await playReady("track-1");
+
+    expect(playerMessage.value).toBe(playErrorMessage(403, "UNKNOWN"));
+    expect(loginMock).not.toHaveBeenCalled();
+    expect(logoutMock).not.toHaveBeenCalled();
+    expect(local.getItem(REDIRECT_KEYS.reconsentPending)).toBeNull();
+
+    await playReady("track-2");
+
+    expect(playerMessage.value).toBe(playErrorMessage(403, "UNKNOWN"));
+    expect(loginMock).not.toHaveBeenCalled();
+    expect(logoutMock).not.toHaveBeenCalled();
+    expect(local.getItem(REDIRECT_KEYS.reconsentPending)).toBeNull();
   });
 });
 
 describe("resetForTests", () => {
   it("stellt Signale, Queue, Timer und reconsentUsed wieder her", async () => {
-    seedValidToken();
+    // R52EEYK: Leiter nur bei nachweislich fehlendem Scope — JWT ohne
+    // user-modify-playback-state (sonst Titel-Meldung statt Re-Consent).
+    seedValidJwt("streaming");
     scriptPlay([{ status: 403, body: { error: {} } }]);
     await playReady("track-1");
     expect(loginMock).toHaveBeenCalledTimes(1);
@@ -953,7 +996,7 @@ describe("resetForTests", () => {
     vi.advanceTimersByTime(10_000);
     expect(playerMessage.value).toBeNull();
 
-    seedValidToken();
+    seedValidJwt("streaming"); // R52EEYK: Missing-Scope-Pfad für die Leiter
     // F401W08: Der persistente Re-Consent-Marker überlebt resetForTests wie
     // einen echten Reload — nur ein erfolgreicher Play räumt ihn; danach ist
     // Re-Consent wieder möglich (reconsentUsed wurde mit geräumt).

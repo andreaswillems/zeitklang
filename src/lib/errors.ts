@@ -49,6 +49,15 @@ export const MISSING_SCOPE_MSG =
   "Spotify hat die Berechtigung zum Steuern der Wiedergabe nicht erteilt — bitte neu anmelden und ALLE Berechtigungen erlauben.";
 
 /**
+ * Track-spezifischer 403 (R52EEYK): PUT /me/player/play lehnt einen
+ * ungültigen/nicht verfügbaren Titel ab (z. B. Reason UNKNOWN), obwohl die
+ * Playback-Scopes nachweislich vollständig oder unbekannt sind — kein
+ * Logout, kein Consent-Dialog, nur dieser handlungsanleitende Text.
+ */
+export const TRACK_UNAVAILABLE_MSG =
+  "Der Titel ist bei Spotify nicht verfügbar — bitte eine andere Karte scannen.";
+
+/**
  * Logout-Hinweis (SA8H08W-1): logout() löscht nur die lokalen Anmeldedaten —
  * Spotify hat keinen Revoke-API-Endpunkt, ein (z. B. gestohlener) Refresh-Token
  * bleibt serverseitig gültig, bis die App-Verbindung unter
@@ -71,7 +80,7 @@ export function playErrorMessage(status: number, reason?: string): string {
     case 401:
       return "Session abgelaufen — bitte neu anmelden.";
     case 403:
-      return "Fehlende Scopes — bitte neu anmelden.";
+      return TRACK_UNAVAILABLE_MSG;
     case 404:
       return "Kein aktives Gerät — Player verbindet noch, bitte erneut versuchen.";
     case 412:

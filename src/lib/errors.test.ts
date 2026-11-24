@@ -10,6 +10,7 @@ import {
   loginErrorMessage,
   MISSING_SCOPE_MSG,
   playErrorMessage,
+  TRACK_UNAVAILABLE_MSG,
 } from "./errors.ts";
 
 // Play-Fehler-Mapping (Spec §5.6, Parity zu web/app.js playTrack/putPlay):
@@ -30,11 +31,9 @@ describe("playErrorMessage", () => {
     expect(playErrorMessage(401)).toBe("Session abgelaufen — bitte neu anmelden.");
   });
 
-  it("403 mit anderem/keinem Reason → Fehlende Scopes", () => {
-    expect(playErrorMessage(403, "OTHER_REASON")).toBe(
-      "Fehlende Scopes — bitte neu anmelden.",
-    );
-    expect(playErrorMessage(403)).toBe("Fehlende Scopes — bitte neu anmelden.");
+  it("403 mit anderem/keinem Reason → Titel nicht verfügbar (R52EEYK)", () => {
+    expect(playErrorMessage(403, "OTHER_REASON")).toBe(TRACK_UNAVAILABLE_MSG);
+    expect(playErrorMessage(403)).toBe(TRACK_UNAVAILABLE_MSG);
   });
 
   it("404 → kein aktives Gerät", () => {
@@ -98,6 +97,12 @@ describe("exportierte Konstanten", () => {
   it("MISSING_SCOPE_MSG (71TAZ1B-3: 403 trotz Re-Consent-Marker, wenn dem Access-Token user-modify-playback-state oder streaming fehlt — handlungsanleitend: neu anmelden und ALLE Berechtigungen erlauben)", () => {
     expect(MISSING_SCOPE_MSG).toBe(
       "Spotify hat die Berechtigung zum Steuern der Wiedergabe nicht erteilt — bitte neu anmelden und ALLE Berechtigungen erlauben.",
+    );
+  });
+
+  it("TRACK_UNAVAILABLE_MSG (R52EEYK: track-spezifischer 403 — kein Logout, kein Consent-Dialog)", () => {
+    expect(TRACK_UNAVAILABLE_MSG).toBe(
+      "Der Titel ist bei Spotify nicht verfügbar — bitte eine andere Karte scannen.",
     );
   });
 });

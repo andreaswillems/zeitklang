@@ -270,7 +270,7 @@ export async function playTrack(trackId: string): Promise<void> {
   // Positive). Scopes, Quelle und Token-Form gehen NUR in die Konsole, nie in
   // die UI und NIEMALS als Token-Werte (#10 + check:secrets); zusätzlich merkt
   // sich der Pfad, ob ein für die Wiedergabe zwingender Scope fehlt (steuert
-  // die Meldung beim zweiten 403). getValidToken kann werfen (z. B.
+  // die Re-Consent-Leiter und die Meldung beim zweiten 403). getValidToken kann werfen (z. B.
   // Refresh-Endpunkt down) — die Diagnose darf den 403-Pfad nie in eine
   // Rejection verwandeln.
   let playbackScopeMissing = false;
@@ -311,7 +311,15 @@ export async function playTrack(trackId: string): Promise<void> {
     setAuthError(LOGIN_PREMIUM_MSG);
     return;
   }
-  if (response.status === 403 && !reconsentUsed && !reconsentPending()) {
+  if (
+    response.status === 403 &&
+    playbackScopeMissing &&
+    !reconsentUsed &&
+    !reconsentPending()
+  ) {
+    // R52EEYK: NUR ein nachweislich fehlender Playback-Scope darf die Leiter
+    // auslösen — track-spezifische 403 (Scopes vollständig oder unbekannt)
+    // zeigen sonst die Titel-Meldung und verbrennen die Grant-Kette nicht.
     // Token ohne nötigen Scope: Refresh ändert die gewährten Scopes nicht,
     // nur ein erzwungener Consent-Dialog holt sie — einmalig pro
     // Seitenladung, sonst Endlosschleife (Parity L514–522). F401W08: Der
@@ -323,7 +331,7 @@ export async function playTrack(trackId: string): Promise<void> {
     login(true);
     return;
   }
-  if (response.status === 403) {
+  if (response.status === 403 && reconsentPending()) {
     // F401W08 + 71TAZ1B-3 (HITL-freigegebene Abweichung, s. redirect.ts
     // KEYS): 403 ohne PREMIUM_REQUIRED, während der Marker schon steht —
     // ZWEITER Re-Consent liefert denselben 403. Scope-aware Aufschlüsselung:
@@ -333,6 +341,8 @@ export async function playTrack(trackId: string): Promise<void> {
     // Sind alle Playback-Scopes vorhanden, bleibt der Stale-Pfad (veraltete
     // Login-Epoche, z. B. UNKNOWN beim Play-Transfer) mit LOGIN_STALE_MSG.
     // Fachdetails (Status/Reason/Scopes) stehen oben bereits in der Konsole (#10).
+    // R52EEYK: Ohne Marker fällt das 403 unten auf playErrorMessage durch
+    // (TRACK_UNAVAILABLE_MSG) — kein Logout, kein Consent-Dialog.
     playerMessage.value = playbackScopeMissing ? MISSING_SCOPE_MSG : LOGIN_STALE_MSG;
     return;
   }
