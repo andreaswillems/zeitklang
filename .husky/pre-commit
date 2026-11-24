@@ -1,0 +1,3 @@
+npx lint-staged        # Biome check --write auf staged Files
+npm run typecheck      # tsc --noEmit — Projekt ist klein, < 5 s
+npm test               # vitest run

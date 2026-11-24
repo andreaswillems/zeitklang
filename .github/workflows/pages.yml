@@ -1,0 +1,51 @@
+name: Deploy PWA to Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      # Actions auf Commit-SHA gepinnt (OWASP A03, ZQ59ZD3-1) — Major-Tag als Kommentar.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # .tool-versions (Repo-Root) ist die einzige Node-Versions-Quelle.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .tool-versions
+      # HUSKY=0: Hooks im CI aus (prepare: husky läuft sonst vergeblich).
+      - run: HUSKY=0 npm ci
+      # Baut die App nach dist/.
+      - run: npm run build
+      # deploy-pages@v4 bricht ab, wenn im Lauf mehrere "github-pages"-
+      # Artefakte liegen (z. B. nach Abbruch/Re-Run). Vor dem Upload alle
+      # vorhandenen Artefakte dieses Laufs löschen.
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              ...context.repo,
+              run_id: context.runId,
+            });
+            for (const a of artifacts.data.artifacts.filter(a => a.name === "github-pages")) {
+              await github.rest.actions.deleteArtifact({ ...context.repo, artifact_id: a.id });
+              core.info("Deleted stale artifact " + a.id);
+            }
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+      - id: deployment
+        uses: actions/deploy-pages@v4

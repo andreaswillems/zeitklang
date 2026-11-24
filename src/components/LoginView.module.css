@@ -1,0 +1,292 @@
+/* Login-Styles aus web/style.css L146–344 plus #install-login/#share-login
+   L1084–1096/L1142–1155 (Parity, Issue-Kommentare erhalten). Id-Selektoren
+   wurden auf Modul-Klassen umgestellt — die DOM-Ids bleiben. Die
+   Sektions-Regel #login (L132–144) und die :has()-Regel (#57) liegen in
+   styles/global.css, weil die Sektions-Hülle in app.tsx bleibt. */
+
+/* #56: Anmelde-Button in die Einhand-Daumenzone — fixiert am
+   unteren Rand, Muster #start aus #45/#47 (safe-area über env(),
+   viewport-fit=cover ist gesetzt). Zentrierung per left/right +
+   margin: 0 auto statt transform, damit die globale :active-
+   Skalierung frei bleibt (Muster #45); Breite wie die Mini-Player-
+   Leiste (#7). min-height 52 px: Tap-Ziel über Apple-HIG-44 /
+   Material-48 — der einzige Primär-Button des Screens darf groß
+   sein. [hidden] der #login-Sektion blendet ihn mit aus (s.o.);
+   im Login sind Leiste/Sheet nie aktiv (#47-Invariante), z-index 10
+   hält die Ordnung nur konsistent. */
+.login-button {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  margin: 0 auto;
+  width: min(398px, calc(100vw - 32px));
+  min-height: 52px;
+  z-index: 10;
+}
+
+/* ---------- #57: Spotify-Branding, Wortmarke, Deko ---------- */
+
+/* #57: Spotify-Branding-Button — flat #1DB954 statt blauem Verlauf,
+   Text und Logo in Spotify-Schwarz #191414 (7.05:1; Weiß auf Grün wäre
+   nur 2.59:1 und fiele durch WCAG AA). Ersetzt die oben entfernte
+   .primary-Regel; die #56-Daumenzone-Regeln hier (position: fixed,
+   Breite, min-height) bleiben unangetastet. display: flex ordnet
+   Logo und Text nebeneinander. */
+.login-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 24px;
+  font-size: 1.05rem;
+  color: #191414;
+  background: #1db954;
+  box-shadow: 0 6px 28px rgba(29, 185, 84, 0.35);
+}
+
+.login-button:hover {
+  background: #1ed760;
+  box-shadow: 0 8px 34px rgba(29, 185, 84, 0.5);
+}
+
+.login-button svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+/* #63: Wortmarke mit sanft laufendem Farb-Gradient (Andreas-Entscheidung:
+   laufender Gradient statt hue-rotate). Technik wie bisher
+   (background-clip: text), ergänzt um background-size: 300% und eine
+   animierte background-position: Start- = Endfarbe, deshalb nahtloser
+   Loop; 7,2 s = 3 × die 2,4-s-Equalizer-Periode (.login-eq) — Logo und
+   Deko laufen im selben Takt. Kontrast (AA): hellste Station #fff,
+   dunkelste Station var(--accent-bright) (≥ 7:1 auf --bg); bewusst kein
+   var(--accent) im animierten Verlauf — keine dunklen Durchgänge. Das
+   Header-h1 oben nutzt denselben Gradient-Look OHNE die Animation und
+   bleibt statisch. */
+.wordmark {
+  margin: 0;
+  font-size: clamp(2.4rem, 10vw, 3.2rem);
+  letter-spacing: -0.03em;
+  background: linear-gradient(
+    100deg,
+    var(--accent-bright),
+    #93c5fd 30%,
+    #fff 55%,
+    #93c5fd 80%,
+    var(--accent-bright)
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: wordmark-flow 7.2s linear infinite;
+}
+
+/* #63: Eine volle Gradient-Periode = genau eine Hintergrundbreite (300 %):
+   background-position von 0 % auf 150 % verschiebt den Verlauf um exakt
+   eine Periode (Position-% wirkt auf die Differenz von Container- und
+   Bildbreite, hier 2 × Elementbreite pro 100 %); Start- = Endfarbe
+   macht den Loop nahtlos. */
+@keyframes wordmark-flow {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 150% 0;
+  }
+}
+
+/* #57: Dezente Equalizer-Deko unter der Wortmarke — ruhige Variante
+   des .eq-Musters (s. Player): größer, langsamer, vier Balken, mit
+   statischer Grundhöhe. Rein dekorativ (aria-hidden); die
+   prefers-reduced-motion-Regel unten stoppt die Animation. */
+.login-eq {
+  display: flex;
+  gap: 5px;
+  height: 28px;
+  align-items: flex-end;
+}
+
+.login-eq span {
+  width: 5px;
+  border-radius: 3px;
+  background: var(--accent-bright);
+  height: 60%;
+  animation: login-eq-bounce 2.4s ease-in-out infinite;
+}
+
+.login-eq span:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.login-eq span:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.login-eq span:nth-child(4) {
+  animation-delay: 0.9s;
+}
+
+@keyframes login-eq-bounce {
+  0%,
+  100% {
+    height: 30%;
+  }
+  50% {
+    height: 100%;
+  }
+}
+
+.hero-text {
+  margin: 0;
+  font-size: 1.1rem;
+  max-width: 30ch;
+}
+
+/* #57: Premium-Hinweis als Badge statt grauem Fließtext — Pill mit
+   Rand und Karten-Hintergrund; Text #d9d9d9 ergibt 13.68:1 auf --bg
+   (Akzeptanzkriterium ≥ 4.5:1). */
+.badge {
+  margin: 0;
+  padding: 6px 14px;
+  color: #d9d9d9;
+  font-size: 0.9rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.badge a {
+  color: inherit;
+}
+
+/* ---------- #58: Login-Flow (Weiterleitung, Fehlerbereich) ---------- */
+
+/* #58: Weiterleitungs-Zustand — Button deaktiviert (Doppeltipp-Schutz,
+   „Weiterleitung zu Spotify…“ setzt die View). opacity statt Farbwechsel,
+   die Spotify-Optik (#57) bleibt erkennbar; die globale :active-
+   Skalierung greift auf disabled ohnehin nicht. */
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* #58: Fehlerbereich mit „Erneut versuchen“ statt reiner Statuszeile —
+   Karte im Stil von badge/Now-Playing (Karten-Hintergrund, Rand), Warn-
+   Icon im Fehler-Ton von #status (#ff9999). [hidden] mit !important
+   (global.css) blendet ihn aus; Breite wie Button/Leiste (#7/#56-Muster). */
+.login-error:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(398px, calc(100vw - 32px));
+  margin: 0;
+  padding: 16px;
+  text-align: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+.login-error svg {
+  width: 22px;
+  height: 22px;
+  fill: #ff9999;
+  flex-shrink: 0;
+}
+
+.login-error p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* Retry-Button: Ghost-Optik (global.css), etwas kompakter als
+   Chevron/Logout. Original #login-error .ghost — der Retry-Button ist
+   der einzige Button im Fehlerbereich, .ghost bleibt global. */
+.login-error button {
+  padding: 10px 18px;
+  font-size: 0.9rem;
+}
+
+/* ---------- SA8H08W-1: Logout-Hinweis im Login ---------- */
+
+/* Logout-Hinweis nach logout(): dezente Info-Karte im Stil von
+   .login-error (Karten-Hintergrund, Rand), aber ohne Icon/Retry —
+   reiner Hinweistext. [hidden] mit !important (global.css) blendet ihn
+   aus, solange logoutHint null ist; Breite wie Button/Leiste
+   (#7/#56-Maße). Text #d9d9d9 auf --bg: 13.68:1 (AA). */
+.logout-hint:not([hidden]) {
+  width: min(398px, calc(100vw - 32px));
+  margin: 0;
+  padding: 12px 16px;
+  color: #d9d9d9;
+  font-size: 0.9rem;
+  text-align: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+/* ---------- #18: Install-Button im Login ---------- */
+
+/* Install-Button im Login unter der Premium-Badge: volle Breite wie der
+   Login-Button (#57/#56-Maße), dezent als Ghost-Button (Andreas-Entscheidung)
+   — konkurriert nicht mit dem grünen Spotify-Button. Sichtbarkeit folgt dem
+   installPrompt-Signal (beforeinstallprompt/appinstalled), [hidden] greift
+   global. */
+.install-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: min(398px, calc(100vw - 32px));
+  min-height: 52px; /* Tap-Ziel (#56) */
+}
+
+.install-login svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* ---------- #94: „App teilen“ im Login ---------- */
+
+/* Zweiter Ghost-Button im Login unter dem Install-Button (#18-Muster),
+   aber immer sichtbar — Teilen hängt nicht am Install-Status des Browsers.
+   Maße wie .install-login (Tap-Ziel nach #56), QR-Icon aus #62. */
+.share-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: min(398px, calc(100vw - 32px));
+  min-height: 52px; /* Tap-Ziel (#56) */
+}
+
+.share-login svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* ---------- Reduced Motion (web/style.css L966–977) ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* #57: Login-Equalizer steht still statt im 0.01-ms-Takt zu
+     flackern — die Balken zeigen ihre statische Höhe (s.o.). */
+  .login-eq span {
+    animation: none;
+  }
+
+  /* #63: Wortmarke-Gradient steht still statt im 0.01-ms-Takt zu
+     flackern (Muster .login-eq span, #57) — die Ruhelage zeigt den
+     Gradient wie bisher statisch und bleibt gut lesbar. */
+  .wordmark {
+    animation: none;
+  }
+}

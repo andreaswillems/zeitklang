@@ -1,0 +1,43 @@
+/* „Angemeldet bleiben"-Toggle (YWEC4VR-3) — dezente Checkbox-Zeile im Stil
+   der bestehenden Ghost-/Hinweis-Elemente (--text-dim auf --bg, Akzent für
+   die Checkbox wie --accent-bright der Fokus-Ringe). */
+
+/* Basis: label umschließt Checkbox + Text (zugänglicher Name ohne extra
+   aria-Attribut). In LoginView liegt der Toggle im zentrierten Grid der
+   #login-Sektion (global.css), im Scan-Header siehe .header unten. */
+.persist-login {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.persist-login input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent-bright);
+  cursor: pointer;
+}
+
+.persist-login input:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
+/* Einsatz im Scan-Header (app.tsx): Wrapper sitzt neben dem #logout-Icon
+   oben rechts — #logout ist absolute top: 0 right: 0 mit 40 px Breite,
+   der Wrapper landet 8 px links daneben. [hidden] am Wrapper greift global
+   mit !important (global.css), hidden analog current !== "scan". */
+.header {
+  position: absolute;
+  top: 0;
+  right: 48px;
+  display: flex;
+  align-items: center;
+  height: 40px; /* wie #logout */
+}

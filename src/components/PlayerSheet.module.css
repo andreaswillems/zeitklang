@@ -1,0 +1,309 @@
+/* Player-Sheet-Styles aus web/style.css — #now-playing L571–695 (revealed-
+   Regeln L645–693 inkl. ::after-Overlay), #toggle L695–752 (nur der Sheet-
+   Anteil der gemeinsamen #toggle/#mini-toggle-Selektoren L728–749 — der
+   MiniPlayer folgt in Subtask 2), .eq L754–788 (inkl. :not(.playing)),
+   #sheet-backdrop L888–902, #player-sheet L903–957. Parity, Issue-Kommentare
+   erhalten. ID-Selektoren wurden auf Modul-Klassen umgestellt — die DOM-Ids
+   (#player-sheet, #now-playing, #cover, #np-title, #np-artist, #toggle,
+   #sheet-backdrop, #sheet-close) bleiben. */
+
+/* ---------- Now-Playing-Karte ---------- */
+
+.now-playing {
+  /* #13: Anker für Overlay (.np-meta/#toggle) und Scrim (::after);
+     min-height hält die Karte aufrecht, falls mal kein Cover-Bild
+     geladen ist (#cover hidden → kein Flow-Inhalt mehr). */
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.cover {
+  width: 92px;
+  /* #13: Höhe folgt via aspect-ratio dem width-Übergang — die Karte wächst
+     dadurch kontinuierlich mit, ohne eigenen height-Übergang. */
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+  /* Spoiler-Schutz wie bei Titel/Interpret: Cover verrät sonst das Album */
+  filter: blur(7px);
+  /* #13: sanftes Wachsen beim Enthüllen (92px → 100% in .revealed);
+     Dauer und Easing synchron zu den Overlay-Übergängen (.np-meta/#toggle). */
+  transition:
+    filter 0.3s,
+    width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* #13: Titel/Interpret wandern beim Enthüllen in ein Overlay unten über das
+   Cover. Dauerhaft absolut positioniert; die Ruhelage reproduziert die
+   frühere Flow-Box pixelgenau (left 120 = 14+92+14, right 76 = 14+48+14,
+   top 50% + translateY(-50%) = mittig zur 92px-Cover-Zeile) — dadurch ist
+   der Wechsel selbst ein interpolierbarer Übergang statt eines Sprungs. */
+.np-meta {
+  position: absolute;
+  left: 120px;
+  right: 76px;
+  top: 50%;
+  transform: translateY(-50%);
+  /* über dem Scrim (z-index 1) */
+  z-index: 2;
+  transition:
+    left 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Spoiler-Schutz: Titel/Interpret unscharf, bis das Sheet enthüllt
+   (#61/#66: .revealed folgt spoilerOpen) */
+.np-title,
+.np-artist {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  filter: blur(7px);
+  transition: filter 0.3s;
+}
+
+.np-title {
+  font-weight: 700;
+}
+
+.np-artist {
+  margin-top: 2px;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+
+.now-playing.revealed .cover,
+.now-playing.revealed .np-title,
+.now-playing.revealed .np-artist {
+  filter: none;
+}
+
+/* ---------- #13: Enthüll-Layout des Covers ---------- */
+
+/* Aufgedeckt wächst das Cover weich auf volle Kartenbreite (width-Transition
+   in .cover), Titel/Interpret und Play-Button gleiten dabei in ein Overlay
+   unten über das Cover (Spotify-Style). Alles interpolierbar, kein JS —
+   prefers-reduced-motion greift über die Global-Regel in global.css. */
+.now-playing.revealed .cover {
+  width: 100%;
+}
+
+.now-playing.revealed .np-meta {
+  left: 14px;
+  top: calc(100% - 14px);
+  transform: translateY(-100%);
+}
+
+/* Basis-Regel .toggle ganz bewusst VOR der Revealed-Überschreibung unten
+   (Biome lint/style/noDescendingSpecificity, 64CAM8A-3): ein später
+   deklarierter, schwächerer Selektor könnte sonst von der stärkeren
+   Revealed-Regel verdeckt werden. */
+.toggle {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  /* Flex statt Inline-Baseline: SVGs sauber zentrieren (Follow-up #1) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  color: #0a1b33;
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+  /* #13: dauerhaft absolut, Ruhelage wie im Flow (rechts bündig, mittig
+     zur 92px-Zeile — Höhe 48px ist fix, deshalb top statt translateY und
+     transform bleibt für die :active-Skalierung frei). */
+  position: absolute;
+  right: 14px;
+  top: calc(50% - 24px);
+  /* über dem Scrim (z-index 1) */
+  z-index: 2;
+  /* Button-Global-Transition (s.o.) um top erweitert — .toggle ersetzt sie */
+  transition:
+    transform 0.15s,
+    box-shadow 0.2s,
+    background 0.2s,
+    color 0.2s,
+    top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.now-playing.revealed .toggle {
+  /* Unterkante 20px über dem Kartenrand, optisch mittig zur Textzeile */
+  top: calc(100% - 68px);
+}
+
+/* #13: Scrim für Lesbarkeit der Overlay-Texte über dem Cover — immer
+   vorhanden, blendet mit dem Enthüllen ein; pointer-events: none hält
+   die Overlay-Buttons klickbar. backdrop-filter auf .now-playing erzeugt
+   den Stacking-Kontext, die z-Indexe bleiben also in der Karte. */
+.now-playing::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40%;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.55));
+  border-radius: 0 0 20px 20px;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.now-playing.revealed::after {
+  opacity: 1;
+}
+
+/* Play/Pause-Icons (#1): Inline-SVG statt ▶/▮▮ — identisch auf allen Plattformen.
+   fill: currentColor erbt die Button-Farbe; der Mini-Player (#7) nutzt sie mit
+   (gemeinsamer Selektor in web/style.css L728–749 — hier nur der Sheet-Anteil,
+   #mini-toggle folgt in Subtask 2).
+   #29: Icon zeigt die NÄCHSTE AKTION, nicht den Zustand — laufend → Pause-Icon (⏸),
+   pausiert → Play-Icon (▶), konsistent zum dynamischen aria-label. */
+.toggle svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+/* Default (Wiedergabe läuft): Play-Icon aus, Pause-Icon sichtbar */
+.toggle .icon-play {
+  display: none;
+}
+
+/* Pausiert: Pause-Icon aus … */
+.toggle.paused .icon-pause {
+  display: none;
+}
+
+/* … Play-Icon an (Aktion „fortsetzen“) */
+.toggle.paused .icon-play {
+  display: block;
+}
+
+/* Equalizer: läuft nur bei laufender Wiedergabe */
+.eq {
+  display: flex;
+  gap: 3px;
+  height: 14px;
+  align-items: flex-end;
+}
+
+.eq span {
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent-bright);
+  animation: eq-bounce 0.9s ease-in-out infinite;
+}
+
+.eq span:nth-child(2) {
+  animation-delay: 0.25s;
+}
+
+.eq span:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+@keyframes eq-bounce {
+  0%,
+  100% {
+    height: 25%;
+  }
+  50% {
+    height: 100%;
+  }
+}
+
+.now-playing:not(.playing) .eq span {
+  animation-play-state: paused;
+}
+
+/* ---------- #37: Player als Bottom-Sheet über dem Scanner ---------- */
+
+/* Abgedunkelter Rest-Bereich über der Scan-Ansicht; Tap schließt das Sheet.
+   Über der Mini-Player-Leiste (z 10), unter dem Sheet (z 20) — bei offenem
+   Sheet ist die Leiste ohnehin versteckt. */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 15;
+}
+
+.sheet-backdrop.open {
+  opacity: 1;
+}
+
+/* Sheet fährt von unten hoch — transform statt Layout-Sprung (Muster aus
+   #13); Breite wie die Mini-Player-Leiste (#7). */
+.player-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 100%);
+  width: min(398px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto; /* kleine Viewports; offen für künftige Rate-Eingabe (#12) */
+  padding: 4px 16px calc(20px + env(safe-area-inset-bottom));
+  background: rgba(18, 18, 22, 0.92);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.5);
+  z-index: 20;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.player-sheet.open {
+  transform: translate(-50%, 0);
+}
+
+/* Das Sheet fährt per transform — die view-in-Animation für Ansichten
+   (section:not([hidden])) würde sie beim Öffnen kurz überlagern. */
+.player-sheet:not([hidden]) {
+  animation: none;
+}
+
+/* Chevron (Schließen): volle Breite als Tap-Ziel, ohne Ghost-Rahmen */
+.sheet-close {
+  width: 100%;
+  padding: 8px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.sheet-close:hover {
+  color: #fff;
+  border-color: transparent;
+}
+
+.sheet-close svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+/* Karte sitzt direkt unter dem Chevron — der Flow-Abstand (16 px als
+   ehemaliges erstes Element der Player-Ansicht) fällt weg. */
+.player-sheet .now-playing {
+  margin-top: 0;
+}

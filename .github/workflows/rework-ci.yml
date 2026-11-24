@@ -1,0 +1,41 @@
+name: PWA CI
+
+# Prüft die App (Lint, Audit, Types, Tests, Build, Secret-Scan) bei jedem
+# Push und Pull-Request.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rework-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      # Actions auf Commit-SHA gepinnt (OWASP A03, ZQ59ZD3-1) — Major-Tag als Kommentar.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # .tool-versions (Repo-Root) ist die einzige Node-Versions-Quelle.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .tool-versions
+      # HUSKY=0: Hooks im CI aus (prepare: husky läuft sonst vergeblich).
+      - run: HUSKY=0 npm ci
+      # Voller Deps-Audit inkl. dev (OWASP A03, ZQ59ZD3-1 + 6GF4NME): prod-only
+      # reichte bis 6GF4NME; seitdem gilt `npm audit` exit 0 fuer prod UND dev
+      # (glob/minimatch via workbox-build per npm override auf glob ^14.0.6 gefixt).
+      - run: npm audit
+      - run: npm run ci          # Biome: Lint + Format + Imports (Exit != 0 bei Befunden)
+      - run: npm run typecheck   # tsc --noEmit
+      - run: npm test            # vitest run
+      - run: npm run build       # Build-Smoke
+      # Secret-Scan über das ganze Repo (src, dist, scripts, public/, .github/, .husky/)
+      - run: npm run check:secrets
+        env:
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          # Explizites CI: check-secrets.mjs exit 1 (fail-hard), wenn das Secret in CI fehlt (ZF96RD7).
+          CI: "true"

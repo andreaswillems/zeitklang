@@ -1,0 +1,50 @@
+{
+  "name": "zeitklang",
+  "version": "0.0.0",
+  "description": "Zeitklang-PWA (Vite + Preact + TypeScript) — Spotify-Login, QR-Scan, Wiedergabe",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:watch": "vite build --watch",
+    "preview": "vite preview",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "ci": "biome ci .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "prepare": "husky"
+  },
+  "type": "module",
+  "private": true,
+  "lint-staged": {
+    "*.{ts,tsx,css,json}": [
+      "biome check --write --no-errors-on-unmatched"
+    ]
+  },
+  "dependencies": {
+    "@preact/signals": "^2.11.4",
+    "html5-qrcode": "^2.3.8",
+    "preact": "^11.2.0",
+    "qrcode-generator": "^2.0.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.8",
+    "@preact/preset-vite": "^2.10.6",
+    "@testing-library/jest-dom": "^8.0.0",
+    "@testing-library/preact": "^3.2.6",
+    "@types/qrcode-generator": "^0.0.16",
+    "happy-dom": "^21.0.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.1"
+  },
+  "overrides": {
+    "workbox-build": {
+      "glob": "^14.0.6"
+    }
+  }
+}

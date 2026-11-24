@@ -1,0 +1,236 @@
+/* Zeitklang PWA — globaler Teil aus web/style.css (Parity).
+   Komponenten-Styles folgen in Phase 3b–3f als *.module.css neben den Views. */
+
+:root {
+  --bg: #0e0e0e;
+  --accent: #3b82f6;
+  --accent-bright: #60a5fa;
+  --text-dim: #b3b3b3;
+  --card: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* #90: App-Shell-Lock — html/body haben feste Viewport-Höhe und sind
+   gegen Scrollen gesperrt, body zusätzlich gegen Overscroll (unterdrückt
+   den iOS-Rubber-Band-Bounce ab Safari 16). Wisch-Gesten verschieben
+   damit weder den Header noch den Hintergrund: Der radiale Gradient
+   bleibt an body verankert, das Dokument scrollt nie — main ist der
+   einzige Scroll-Container (nächste Regel). */
+html {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  /* biome-ignore lint/suspicious/noDuplicateProperties: 100vh als Fallback ohne dvh-Support (Parity web/style.css) */
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #fff;
+  background:
+    radial-gradient(120% 55% at 50% -10%, rgba(59, 130, 246, 0.22), transparent 70%),
+    var(--bg);
+  padding: calc(20px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
+    calc(28px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+}
+
+/* #90: main als einziger interner Scroll-Container — flex: 1 füllt die
+   Resthöhe unter dem stehenden Header, min-height: 0 erlaubt das
+   Schrumpfen unter die Inhaltshöhe (sonst greift overflow-y: auto im
+   Flex-Layout nicht), overscroll-behavior: contain hält Wisch-Gesten
+   im Container. Übergroßer Inhalt (kleine Screens) scrollt nur hier,
+   Header und Hintergrund bleiben unbewegt. */
+main {
+  max-width: 430px;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+header {
+  /* #38: Anker für den absolut positionierten Abmelden-Icon-Button. */
+  position: relative;
+  margin-bottom: 28px;
+}
+
+/* #38: Abmelden als runder Icon-Button oben rechts im Header — visuelles
+   Text-Label entfällt, der zugängliche Name bleibt (aria-label, s.
+   index.html). Ghost-Optik wie Torch/Chevron; [hidden] mit !important
+   (s.o.) bleibt stärker als display:flex. app.js zeigt den Button nur in
+   der Scan-Ansicht; das offene Player-Sheet (#37) legt sein Backdrop
+   darüber — schließen dann via Chevron/Backdrop-Tap. */
+#logout {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+#logout:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+#logout svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 8vw, 2.6rem);
+  letter-spacing: -0.03em;
+  background: linear-gradient(100deg, var(--accent-bright), #fff 65%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- Buttons ---------- */
+
+button {
+  font: inherit;
+  font-weight: 700;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.2s,
+    background 0.2s,
+    color 0.2s;
+}
+
+button:active {
+  transform: scale(0.96);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
+.ghost {
+  padding: 12px 22px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+
+.ghost:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ---------- Ansichten (Login / Scan) ---------- */
+
+/* !important: display-Regeln wie #login überlagern sonst das hidden-Attribut */
+[hidden] {
+  /* biome-ignore lint/complexity/noImportantStyles: muss display-Regeln wie #login übertreffen, sonst bleibt das hidden-Attribut wirkungslos */
+  display: none !important;
+}
+
+section:not([hidden]) {
+  animation: view-in 0.25s ease;
+}
+
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* #57: Das Header-h1 ist im Login ausgeblendet — die Wortmarke der
+   LoginView (3b) ist dort der zentrierte visuelle Anker. Fallback ohne
+   :has()-Support (iOS < 15.4): Titel zusätzlich im Header sichtbar. */
+body:has(#login:not([hidden])) header h1 {
+  display: none;
+}
+
+/* Sektions-Layout Login (web/style.css L132–144) — die Hülle bleibt in
+   app.tsx (3a), der Inhalt liegt in LoginView.module.css. */
+#login {
+  display: grid;
+  gap: 18px;
+  place-items: center;
+  text-align: center;
+  min-height: 55vh;
+  /* biome-ignore lint/suspicious/noDuplicateProperties: 55vh als Fallback ohne dvh-Support (Parity web/style.css) */
+  min-height: 55dvh;
+  /* #56: Platz für den fixierten Anmelde-Button freihalten (Muster
+     #scan { padding-bottom }): 24 px Anstand + 52 px Button-Höhe +
+     Luft — der zentrierte Flow-Inhalt (hero-text, hint) bleibt auch
+     auf kleinen Screens sicher über der Daumenzone. */
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+}
+
+/* Sektions-Layout Ladezustand (#8, web/style.css L348–363): sichtbar ab
+   First Paint, bis der View-Switch die Ziel-Ansicht einblendet. Die globale
+   prefers-reduced-motion-Regel unten stoppt die Spinner-Rotation. */
+#loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 56px 0;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+#loading p {
+  margin: 0;
+}
+
+/* XQSXXEX: Spinner für den statischen Pre-JS-Ladezustand in index.html —
+   Twin der Regel in LoadingView.module.css, denn Vite hasht Modul-Klassen
+   und -Keyframes (statisches HTML kann sie nicht referenzieren). Die
+   montierte gehashte Klasse kollidiert nicht mit diesem globalen Selektor. */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-radius: 50%;
+  border-top-color: var(--accent-bright);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: globales A11y-Stoppmuster — muss alle Autoren-Animationen übertreffen */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: globales A11y-Stoppmuster — muss alle Autoren-Transitions übertreffen */
+    transition-duration: 0.01ms !important;
+  }
+}

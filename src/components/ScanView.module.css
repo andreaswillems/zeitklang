@@ -1,0 +1,338 @@
+/* Scan-Styles aus web/style.css L380–568 (Scan-Sektion inkl. #scan/#status),
+   L980–1077 (#70 Guide), L1099–1136 (#install-scan) und L1158–1200
+   (#share-scan) — Parity, Issue-Kommentare erhalten. ID-Selektoren wurden
+   auf Modul-Klassen umgestellt — die DOM-Ids bleiben. Die Sektions-Hülle
+   #scan und die Statuszeile #status bleiben in app.tsx (3a) und applizieren
+   die Klassen .scan/.status aus diesem Modul. */
+
+/* ---------- Scan (§6.2/§6.3) ---------- */
+
+/* #45: Anker-Wrapper für die Overlay-Buttons (#torch oben links,
+   #scan-stop oben rechts) über dem Kamerabild; der Abstand nach oben
+   wandert vom #reader hierher. */
+.reader-wrap {
+  position: relative;
+  margin-top: 16px;
+}
+
+.reader video {
+  width: 100%;
+  display: block;
+  border-radius: 20px;
+}
+
+.result {
+  margin: 16px 0 0;
+  min-height: 1.3em;
+  color: var(--accent-bright);
+  word-break: break-all;
+}
+
+/* #45: Overlay-Buttons über dem Kamerabild — Torch (#3) oben links,
+   Scan-Stopp oben rechts, runde Icon-Optik wie der Abmelden-Button (#38).
+   Beide sind nur sichtbar, solange der Scanner läuft (app.js); [hidden] mit
+   !important (s.o.) bleibt stärker als display:flex.
+   Notch-Sicherheit: #reader-wrap liegt im Flow unter Header + Body-Padding
+   (env(safe-area-inset-top), s.o.) — der 12-px-Abstand genügt daher, die
+   Notch kann das Overlay nicht erreichen. */
+.reader-wrap button {
+  position: absolute;
+  top: 12px;
+  width: 44px; /* min. Tap-Ziel (#45) */
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(18, 18, 22, 0.72);
+  border: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  z-index: 5;
+}
+
+.torch {
+  left: 12px;
+}
+
+.scan-stop {
+  right: 12px;
+}
+
+.reader-wrap button svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+/* Aktiver Zustand: blauer Akzent statt wechselndem Text (State per aria-pressed) */
+.torch[aria-pressed="true"] {
+  color: var(--accent-bright);
+  border-color: var(--accent-bright);
+}
+
+/* #62: Start-Button als breites Rechteck in der Daumenzone statt rundem
+   50-vw-Button (#47/#55/#50 — Viewport-Zentrierung entfällt). Muster
+   #login-button (#56): position: fixed unten, Zentrierung per left/right +
+   margin: 0 auto (kein transform — die globale :active-Skalierung bleibt
+   frei), Breite wie die Mini-Player-Leiste (#7), min-height 52 px Tap-Ziel;
+   QR-Icon + Text „Scannen“ (index.html): Der Button startet einen Scan,
+   keine Wiedergabe — deshalb ersetzt das QR-Icon das Play-SVG.
+   Selektor bleibt .reader-wrap .start (2 Klassen, ehemals 2 IDs): Der Button
+   liegt im DOM weiter im .reader-wrap (app.js-Ref unverändert), und nur so
+   schlägt er die Overlay-Regel .reader-wrap button (#45, Klasse + Element)
+   sicher. Nach der #49-Lehre muss JEDE geteilte Property hier überschrieben
+   werden: top: auto gegen top: 12px (position: fixed mit top UND bottom zöge
+   den Button sonst an den oberen Rand), height: auto gegen height: 44px,
+   border-radius: 999px und backdrop-filter: none gegen die Overlay-Optik.
+   Kein Konflikt mit der Mini-Player-Leiste: Beide sind nie gleichzeitig
+   sichtbar (#47-Invariante: Leiste ⇔ Track ∧ Sheet zu ∧ Scanner aktiv;
+   der Button nur bei gestopptem Scanner). Backdrop (15)/Sheet (20) über-
+   decken ihn bei offenem Sheet — der Scanner läuft dann, der Button ist
+   hidden. [hidden] (s.o., !important) blendet ihn aus, solange der
+   Scanner läuft. */
+.reader-wrap .start {
+  position: fixed;
+  top: auto;
+  left: 16px;
+  right: 16px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  margin: 0 auto;
+  width: min(398px, calc(100vw - 32px));
+  height: auto;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 24px;
+  font-size: 1.05rem;
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: 0 10px 34px rgba(59, 130, 246, 0.45);
+  z-index: 10;
+}
+
+/* #62: Fixe Icon-Größe (24 px wie #login-button svg) statt 45 %-Skalierung
+   — der Button wächst nicht mehr mit dem Viewport. Zwei Klassen-Selektoren
+   bleiben nötig, um gegen .reader-wrap button svg (22 px, s.o. #45) zu
+   gewinnen. */
+.reader-wrap .start svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+/* #47/#62: Platzhalter-Fläche nur, solange der Start-Button sichtbar ist
+   (Kamera aus) — mit laufendem Video bestimmt dessen Seitenverhältnis
+   die Höhe. Seit #62 liegt der Button fixiert in der Daumenzone, die
+   Fläche umschließt ihn nicht mehr, 40dvh genügt (Andreas-Entscheidung,
+   #62). Browser ohne :has()-Support (iOS < 15.4) ignorieren die Fläche;
+   der Button bleibt trotzdem sichtbar. */
+.reader-wrap:has(.start:not([hidden])) {
+  min-height: 40dvh;
+}
+
+/* #7/#38/#45/#62: Der untere Freiraum schützt die Scan-Inhalte davor, von
+   der fixen Mini-Player-Leiste überdeckt zu werden (≈ 74 px über dem Rand)
+   und seit #62 vom fixierten Start-Button in der Daumenzone (24 px Anstand
+   + 52 px Höhe + Luft, Muster #login/#56). */
+.scan {
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+}
+
+.status {
+  margin: 20px 0 0;
+  min-height: 1.3em;
+  color: #ff9999;
+  word-break: break-word;
+}
+
+/* ---------- #70: Onboarding-Kurzanleitung in der Scan-Ansicht ---------- */
+/* Nur bei gestopptem Scanner sichtbar: derselbe Zustand wie die Platzhalter-
+   Fläche aus #47 — #start ist genau dann sichtbar, wenn der Scanner gestoppt
+   ist. Ohne :has()-Support (iOS < 15.4) bleibt die Anleitung ausgeblendet
+   (gleicher dokumentierter Fallback wie die Fläche aus #47). */
+/* Nachtrag (Andreas, 6. November 2026, nach Live-Feedback): Karte mittig
+   in der freien Fläche zwischen Header und Scannen-Button statt im 40-dvh-
+   Platzhalter (dort saß sie zu weit oben). Fixiertes Band: oben Header-Zone
+   (Body-Padding 20 px + h1 ca. 38 px + Header-Abstand 28 px = 88 px,
+   dokumentierte Näherung, plus Safe-Area), unten bis zur Oberkante des
+   fixierten Scannen-Buttons aus #62 (24 px + 52 px = 76 px, plus Safe-Area).
+   Breite wie main begrenzt (Body-Padding 16 px je Seite), Zentrierung per
+   left/right + margin (Muster #45/#56, kein transform). */
+.guide {
+  position: fixed;
+  top: calc(88px + env(safe-area-inset-top));
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  left: calc(16px + env(safe-area-inset-left));
+  right: calc(16px + env(safe-area-inset-right));
+  max-width: 430px;
+  margin: 0 auto;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  pointer-events: none;
+}
+.reader-wrap:has(.start:not([hidden])) .guide {
+  display: flex;
+}
+.guide-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+.guide-title {
+  margin: 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+.guide-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+.guide-steps li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+}
+.step-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: Reihenfolge wie in web/style.css (Parity: #reader-wrap #start svg L498 steht vor .step-icon svg L1051) — die Selektoren zielen auf disjunkte Elemente, die Kaskade bleibt konfliktfrei. */
+.step-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: var(--accent-bright);
+}
+.step-text strong {
+  display: block;
+  font-size: 0.95rem;
+}
+.step-text small {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+/* Chevron-Pfeile zwischen den Einträgen: auf die Icon-Spalte zentriert
+   (Icon-Kreis 48 px, Pfeil-Mitte bei 24 px), rein dekorativ (aria-hidden). */
+.step-arrow {
+  position: absolute;
+  top: calc(100% - 9px);
+  left: 15px;
+  width: 18px;
+  height: 18px;
+  fill: var(--text-dim);
+}
+
+/* ---------- #18: Install-Button in der Guide-Karte (#70) ---------- */
+
+/* Install-Button in der Guide-Karte (#70). #49-Falle: Der Button liegt im
+   .reader-wrap, die Overlay-Regel .reader-wrap button (#45, Klasse+Element)
+   würde ihn zum runden 44-px-Overlay machen. Der 2-Klassen-Selektor schlägt
+   sie sicher — nach der #62-Lehre wird JEDE geteilte Property überschrieben
+   (position/top/left/right/bottom/z-index/display/width/height/padding/
+   border-radius/color/background/border/backdrop-filter). pointer-events:
+   auto, weil .guide als Ganzes pointer-events: none hat (#70) — sonst wäre
+   der Button nicht klickbar. Sichtbarkeit: Guide nur bei gestopptem Scanner,
+   Button selbst nur, wenn der Browser installieren kann (app.js). */
+.reader-wrap .install-scan {
+  position: static;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: center;
+  width: fit-content;
+  height: auto;
+  margin-top: 4px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  pointer-events: auto;
+}
+.reader-wrap .install-scan svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* ---------- #94: „App teilen“ in der Guide-Karte ---------- */
+
+/* „App teilen“ in der Guide-Karte (#70) — dieselbe #49-Falle wie
+   #install-scan (#18): Die Overlay-Regel .reader-wrap button (1 Klasse +
+   Element, s.o. bei #45) greift auch für diesen Button; der 2-Klassen-
+   Selektor schlägt sie sicher und überschreibt JEDE geteilte Property
+   (position, top, left, right, bottom, z-index, display, width, height,
+   padding, border-radius, color, background, border, backdrop-filter).
+   pointer-events: auto, weil .guide als Ganzes pointer-events: none hat
+   (#70); Sichtbarkeit folgt allein der Guide-Karte (nur bei gestopptem
+   Scanner, :has() aus #47/#70). */
+.reader-wrap .share-scan {
+  position: static;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: center;
+  width: fit-content;
+  height: auto;
+  margin-top: 4px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--border);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  pointer-events: auto;
+}
+
+.reader-wrap .share-scan svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
