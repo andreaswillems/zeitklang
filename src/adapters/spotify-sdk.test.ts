@@ -63,9 +63,9 @@ interface FakeScriptElement {
   tagName: string;
   src: string;
   async: boolean;
-  /** A03 F4 (16YMRDA-1): SRI — integrity-Attribut des Script-Tags */
+  /** bleibt leer — SRI entfernt (Revert 16YMRDA) */
   integrity: string;
-  /** A03 F4 (16YMRDA-1): CORS-Mode, Pflicht für SRI bei cross-origin Scripts */
+  /** bleibt null — war nur Pflicht-Begleiter von SRI (CORS-Mode) */
   crossOrigin: string | null;
   textContent: string;
   onerror: ((event?: unknown) => void) | null;
@@ -339,24 +339,15 @@ describe("loadSpotifySdk — Load-Timeout (A10 F6)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// SRI (Subresource Integrity) am dynamischen SDK-Script-Tag — A03 F4
-// (Ticket 16YMRDA-1, HITL-Entscheid Option (a)): integrity + crossOrigin am
-// per document.createElement("script") erzeugten Element. crossOrigin=
-// "anonymous" ist Pflicht für SRI bei cross-origin Scripts (lädt das Script
-// im CORS-Mode; sdk.scdn.co liefert Access-Control-Allow-Origin: *). Die CSP
-// whitelisted in script-src bereits exakt https://sdk.scdn.co
-// (rework/index.html — reserviert, bleibt unverändert).
+// SRI-Entfernung (Revert 16YMRDA, 2026-11-24): Spotify rotiert das
+// ungeversionte SDK-Skript ohne Versionssprung — der gepinnte sha384 wurde
+// stale, der Browser blockierte den Load (Integrity-Mismatch) und das SDK
+// war gar nicht mehr ladbar. Schutz bleibt die CSP: script-src whitelistet
+// in https://sdk.scdn.co exakt (index.html).
 // ---------------------------------------------------------------------------
 
-describe("loadSpotifySdk — SRI (A03 F4, 16YMRDA-1)", () => {
-  it('exportiert SDK_INTEGRITY = "sha384-…" (sha384 des SDK-Scripts, gefetcht 2026-11-22 von https://sdk.scdn.co/spotify-player.js, 25561 bytes)', async () => {
-    const mod = await freshLoaderModule();
-    expect(mod.SDK_INTEGRITY).toBe(
-      "sha384-HRyPFJwmFLBNI5OKyBEO8khWgPzi3uJ6IrutgD+g7CdvCQMAeB3jL/MI2heG1dhI",
-    );
-  });
-
-  it('setzt am script-Element integrity === SDK_INTEGRITY und crossOrigin === "anonymous"; src bleibt exakt die SDK-URL; textContent === "" (kein Inline-Code)', async () => {
+describe("loadSpotifySdk — kein SRI (Revert 16YMRDA)", () => {
+  it('setzt KEIN integrity- und KEIN crossOrigin-Attribut am script-Element; src bleibt exakt die SDK-URL; textContent === "" (kein Inline-Code)', async () => {
     const mod = await freshLoaderModule();
     const promise = mod.loadSpotifySdk();
 
@@ -364,8 +355,8 @@ describe("loadSpotifySdk — SRI (A03 F4, 16YMRDA-1)", () => {
     expect(dom.appended).toHaveLength(1);
     const script = dom.appended[0];
     expect(script.src).toBe(SDK_URL);
-    expect(script.integrity).toBe(mod.SDK_INTEGRITY);
-    expect(script.crossOrigin).toBe("anonymous");
+    expect(script.integrity).toBe("");
+    expect(script.crossOrigin).toBeNull();
     // kein Inline-Code (CSP, Plan §7)
     expect(script.textContent).toBe("");
 

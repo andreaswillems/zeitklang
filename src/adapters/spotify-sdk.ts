@@ -135,25 +135,6 @@ declare global {
 const SDK_URL = "https://sdk.scdn.co/spotify-player.js";
 
 /**
- * SRI-Hash (sha384) des SDK-Scripts — A03 F4 (Audit 2026-11-22), Ticket
- * 16YMRDA-1. Gefetcht 2026-11-22 von https://sdk.scdn.co/spotify-player.js
- * (25561 bytes):
- *   curl -s https://sdk.scdn.co/spotify-player.js | openssl dgst -sha384 -binary | openssl base64 -A
- *
- * Die SDK-URL ist ungeversiont und Spotify rotiert das Skript ohne
- * Versionssprung — der Hash wird dadurch stale. Der Browser blockiert dann
- * den Load (Integrity-Mismatch) und feuert script.onerror: bestehender
- * Fehlerpfad, das SDK lädt fail-closed (kein ungetestetes Skript wird
- * ausgeführt). Rotation-Prozedur: URL neu fetchen, sha384 recomputen,
- * SDK_INTEGRITY aktualisieren. crossOrigin="anonymous" (CORS-Mode) ist
- * Pflicht für SRI bei cross-origin Scripts — sdk.scdn.co liefert
- * Access-Control-Allow-Origin: *. CSP (script-src … https://sdk.scdn.co,
- * rework/index.html) bleibt unverändert.
- */
-export const SDK_INTEGRITY =
-  "sha384-HRyPFJwmFLBNI5OKyBEO8khWgPzi3uJ6IrutgD+g7CdvCQMAeB3jL/MI2heG1dhI";
-
-/**
  * Timeout für das Laden des SDK-Scripts (A10 F6, Audit 2026-11-22): feuert
  * weder window.onSpotifyWebPlaybackSDKReady noch script.onerror (hängendes
  * Script-Load, z. B. langsames Netzwerk), würde die Promise nie settlen.
@@ -181,11 +162,8 @@ export function loadSpotifySdk(): Promise<void> {
   sdkPromise = new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
     script.src = SDK_URL;
-    // A03 F4 (16YMRDA-1): SRI am dynamischen Script-Tag — crossOrigin ist
-    // Pflicht für SRI bei cross-origin Scripts (CORS-Mode); bei stale Hash
-    // blockiert der Browser den Load → script.onerror (fail-closed, s. o.)
-    script.crossOrigin = "anonymous";
-    script.integrity = SDK_INTEGRITY;
+    // kein SRI (Revert 16YMRDA): Spotify rotiert das ungeversionte Skript —
+    // ein gepinnter Hash wurde stale und blockierte den Load komplett.
     script.async = true;
     // A10 F6: Load-Timeout — ohne Timer würde die Promise bei hängendem
     // Script-Load nie settlen. Beim Timeout das Script wieder entfernen.
