@@ -3,7 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- Zoom-Lock für iOS: Nur im standalone-Modus (Home-Bildschirm-App)
+         respektiert WebKit maximum-scale/user-scalable und sperrt Pinch-Zoom;
+         im Safari-Tab ignoriert iOS die Attribute seit iOS 10 (Accessibility).
+         Doppel-Tap-Zoom unterdrückt zusätzlich touch-action: manipulation
+         in global.css. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <!-- #78: Meta-CSP + Referrer-Policy — GitHub Pages setzt keine Security-Header,
          Meta-Tags am Head-Anfang sind die einzige Absicherung (Details: Issue #78).
          #92: frame-src für den SDK-iframe (sdk.scdn.co/embedded/index.html) —

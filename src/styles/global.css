@@ -19,11 +19,15 @@
    den iOS-Rubber-Band-Bounce ab Safari 16). Wisch-Gesten verschieben
    damit weder den Header noch den Hintergrund: Der radiale Gradient
    bleibt an body verankert, das Dokument scrollt nie — main ist der
-   einzige Scroll-Container (nächste Regel). */
+   einzige Scroll-Container (nächste Regel).
+   touch-action: manipulation unterdrückt den Doppel-Tap-Zoom; Pinch-Zoom
+   sperrt der Viewport-Meta-Tag (maximum-scale/user-scalable), den iOS nur
+   im standalone-Modus (Home-Bildschirm-App) respektiert. */
 html {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 body {
@@ -35,6 +39,7 @@ body {
   flex-direction: column;
   overflow: hidden;
   overscroll-behavior: none;
+  touch-action: manipulation;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: #fff;
   background:
