@@ -28,6 +28,7 @@ Biome-Auto-Fix: `npm run check:fix` (read-only: `npm run check`). Husky-Hooks la
 ## Deploy
 
 - Push auf `main` deployt `dist/` automatisch nach GitHub Pages (`.github/workflows/pages.yml`, Live: https://andreaswillems.github.io/zeitklang/).
+- `main` ist protected: Fixes laufen über Feature-Branch + Pull Request auf `main`, der Merge deployt automatisch. **PRs immer per `gh`-CLI erstellen** (`gh pr create`, als `andreaswillems` authentifiziert) — der GitHub-App-Connector (MCP) hat auf diesem Repo keinen Schreibzugriff (403 "Resource not accessible by integration").
 - `base: './'` in `vite.config.ts` wegen des Pages-Base-Pfads `/zeitklang/` — alle Asset-URLs relativ halten.
 - GitHub-Actions sind auf Commit-SHAs gepinnt (OWASP A03) — Pinnen beim Aktualisieren beibehalten.
 
