@@ -50,12 +50,14 @@ describe("global.css: #logout (Parity web/style.css L521–553, #38)", () => {
 // Ankunft und schließen nur die Test-Lücke für App-Shell-Lock (#90),
 // Safe-Areas und reduced-motion (kein neues Verhalten, kein TDD-Rot).
 describe("global.css: App-Shell-Lock (#90), Safe-Areas, reduced-motion", () => {
-  it("#90: html/body gegen Scrollen gesperrt, main ist der einzige Scroll-Container", () => {
+  it("#90: html/body gegen Scrollen gesperrt und gegen Zoom-Gesten unterdrückt, main ist der einzige Scroll-Container", () => {
     expect(css).toContain("/* #90: App-Shell-Lock");
     for (const decl of [
       "height: 100%;",
       "overflow: hidden;",
       "overscroll-behavior: none;",
+      // Zoom-Lock: Doppel-Tap-Zoom aus (Pinch-Zoom sperrt der Viewport-Meta-Tag)
+      "touch-action: manipulation;",
     ]) {
       expect(rule("html")).toContain(decl);
     }
@@ -66,6 +68,7 @@ describe("global.css: App-Shell-Lock (#90), Safe-Areas, reduced-motion", () => {
       "flex-direction: column;",
       "overflow: hidden;",
       "overscroll-behavior: none;",
+      "touch-action: manipulation;",
     ]) {
       expect(rule("body")).toContain(decl);
     }
